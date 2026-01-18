@@ -19,4 +19,7 @@
     PermitRootLogin = "yes";
     PasswordAuthentication = true;
   };
+
+  services.tailscale.enable = true;
+  networking.firewall.trustedInterfaces = [ "tailscale0" ];
 }
