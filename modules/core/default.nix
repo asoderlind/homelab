@@ -15,6 +15,7 @@
     ./security.nix
     #./services
     ./system.nix
+    ./virtualisation.nix
     ./users.nix
   ];
 }
