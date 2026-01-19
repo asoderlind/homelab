@@ -10,6 +10,10 @@
     deploy-rs = {
       url = "github:serokell/deploy-rs";
     };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -18,6 +22,7 @@
       nixpkgs,
       deploy-rs,
       home-manager,
+      agenix,
       ...
     }@inputs:
     {
@@ -27,6 +32,7 @@
           modules = [
             ./configuration.nix
             ./modules/core
+            agenix.nixosModules.default
           ];
         };
       };
