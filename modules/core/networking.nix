@@ -6,7 +6,7 @@
 }:
 
 {
-  networking.hostName = "nixos";
+  networking.hostName = "nixos-homelab-dell";
   networking.networkmanager.enable = true;
   networking.firewall.allowedTCPPorts = [
     22

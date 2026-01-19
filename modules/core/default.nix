@@ -13,7 +13,7 @@
     ./nix.nix
     ./programs.nix
     ./security.nix
-    #./services
+    ./services
     ./system.nix
     ./virtualisation.nix
     ./users.nix
