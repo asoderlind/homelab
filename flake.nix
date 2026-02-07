@@ -37,7 +37,7 @@
         };
       };
       deploy.nodes.nixos = {
-        hostname = "10.0.0.6";
+        hostname = "100.114.177.112";
         sshUser = "axel";
         sshOpts = [
           "-i"
