@@ -10,5 +10,6 @@
     ./grafana.nix
     ./prometheus.nix
     ./openproject.nix
+    ./jellyfin.nix
   ];
 }
