@@ -9,7 +9,6 @@
   imports = [
     ./grafana.nix
     ./prometheus.nix
-    ./openproject.nix
     ./jellyfin.nix
     ./samba.nix
   ];

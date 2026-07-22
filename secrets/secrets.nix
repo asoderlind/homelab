@@ -6,6 +6,5 @@ let
   dell = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFJPq/e8eKJNreORcH237atCR17bxVm+YPu4Zk11aZxa root@nixos-homelab-dell";
 in
 {
-  "openproject-secret-key.age".publicKeys = [ dell ];
   "grafana-secret-key.age".publicKeys = [ dell ];
 }
