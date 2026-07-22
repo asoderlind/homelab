@@ -9,8 +9,8 @@
   environment.systemPackages = with pkgs; [
     claude-code
     curl
+    fastfetch
     git
-    neofetch
     tmux
     vim
     wget

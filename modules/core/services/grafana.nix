@@ -1,5 +1,12 @@
 { config, ... }:
 {
+  age.secrets.grafana-secret-key = {
+    file = ../../../secrets/grafana-secret-key.age;
+    owner = "grafana";
+    group = "grafana";
+    mode = "0400";
+  };
+
   # Grafana config - accessible only via Tailscale
   services.grafana = {
     enable = true;
@@ -7,6 +14,7 @@
       http_port = 2342;
       http_addr = "0.0.0.0";
     };
+    settings.security.secret_key = "$__file{${config.age.secrets.grafana-secret-key.path}}";
 
     provision = {
       enable = true;

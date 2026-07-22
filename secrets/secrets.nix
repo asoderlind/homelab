@@ -7,4 +7,5 @@ let
 in
 {
   "openproject-secret-key.age".publicKeys = [ dell ];
+  "grafana-secret-key.age".publicKeys = [ dell ];
 }
