@@ -13,4 +13,9 @@ in
     dell
     axel
   ];
+  # TELEGRAM_BOT_TOKEN=... env file for alertmanager's telegram receiver
+  "alertmanager-env.age".publicKeys = [
+    dell
+    axel
+  ];
 }

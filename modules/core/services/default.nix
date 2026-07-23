@@ -13,5 +13,6 @@
     ./samba.nix
     ./beaverhabits.nix
     ./smart.nix
+    ./alertmanager.nix
   ];
 }
