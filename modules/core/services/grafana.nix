@@ -7,12 +7,16 @@
     mode = "0400";
   };
 
-  # Grafana config - accessible only via Tailscale
+  # Grafana config - reached via the nginx HTTPS proxy (see nginx.nix),
+  # so it only listens on loopback now instead of every interface.
   services.grafana = {
     enable = true;
     settings.server = {
       http_port = 2342;
-      http_addr = "0.0.0.0";
+      http_addr = "127.0.0.1";
+      # Grafana builds absolute links/redirects from this, so it must
+      # match the public-facing URL, not the internal listen address.
+      root_url = "https://grafana.soderlind.dev/";
     };
     settings.security.secret_key = "$__file{${config.age.secrets.grafana-secret-key.path}}";
 

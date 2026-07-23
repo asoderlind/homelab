@@ -1,0 +1,41 @@
+{ config, ... }:
+{
+  # Contains CLOUDFLARE_DNS_API_TOKEN=<token scoped to Zone.DNS edit on
+  # soderlind.dev>. The host is only reachable over Tailscale, so HTTP-01
+  # validation can't work; lego uses this token for DNS-01 instead,
+  # publishing the challenge TXT record via Cloudflare's API.
+  age.secrets.acme-cloudflare-env.file = ../../../secrets/acme-cloudflare-env.age;
+
+  security.acme = {
+    acceptTerms = true;
+    defaults.email = "axesode@gmail.com";
+    # One wildcard cert for every service subdomain: new services need no
+    # new cert (and individual hostnames stay out of the public CT logs).
+    certs."soderlind.dev" = {
+      extraDomainNames = [ "*.soderlind.dev" ];
+      dnsProvider = "cloudflare";
+      environmentFile = config.age.secrets.acme-cloudflare-env.path;
+      group = "nginx";
+    };
+  };
+
+  # TLS-terminating reverse proxy. Listens on 80/443, but neither port is
+  # in allowedTCPPorts - only tailscale0 (a trusted interface) reaches it,
+  # preserving the tailnet-only access model.
+  services.nginx = {
+    enable = true;
+    recommendedProxySettings = true;
+    recommendedTlsSettings = true;
+    recommendedGzipSettings = true;
+
+    virtualHosts."grafana.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString config.services.grafana.settings.server.http_port}";
+        # Grafana live features (dashboard streaming) use a websocket.
+        proxyWebsockets = true;
+      };
+    };
+  };
+}

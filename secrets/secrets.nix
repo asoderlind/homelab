@@ -18,4 +18,9 @@ in
     dell
     axel
   ];
+  # CLOUDFLARE_DNS_API_TOKEN=... env file for ACME DNS-01 challenges
+  "acme-cloudflare-env.age".publicKeys = [
+    dell
+    axel
+  ];
 }

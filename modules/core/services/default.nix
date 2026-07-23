@@ -14,5 +14,6 @@
     ./beaverhabits.nix
     ./smart.nix
     ./alertmanager.nix
+    ./nginx.nix
   ];
 }
