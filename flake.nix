@@ -3,12 +3,9 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     deploy-rs = {
       url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     agenix = {
       url = "github:ryantm/agenix";
@@ -37,7 +34,7 @@
         };
       };
       deploy.nodes.nixos = {
-        hostname = "100.114.177.112";
+        hostname = "nixos-homelab-dell.tail193da7.ts.net";
         sshUser = "axel";
         sshOpts = [
           "-i"

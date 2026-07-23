@@ -10,13 +10,11 @@
   networking.networkmanager.enable = true;
   networking.firewall.allowedTCPPorts = [
     22
-    80
-    443
   ];
 
   services.openssh.enable = true;
   services.openssh.settings = {
-    PermitRootLogin = "yes";
+    PermitRootLogin = "no";
     PasswordAuthentication = true;
   };
 

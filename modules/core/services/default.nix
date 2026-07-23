@@ -12,5 +12,6 @@
     ./jellyfin.nix
     ./samba.nix
     ./beaverhabits.nix
+    ./smart.nix
   ];
 }
