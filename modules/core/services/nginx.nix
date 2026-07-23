@@ -16,6 +16,10 @@
       dnsProvider = "cloudflare";
       environmentFile = config.age.secrets.acme-cloudflare-env.path;
       group = "nginx";
+      # The host's only resolver is Tailscale MagicDNS (100.100.100.100),
+      # whose upstream can serve stale delegation for the zone; have lego
+      # verify the challenge TXT records via a public resolver instead.
+      dnsResolver = "1.1.1.1:53";
     };
   };
 
