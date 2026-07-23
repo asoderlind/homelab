@@ -12,6 +12,11 @@
   # assistant/bridge bot so alert delivery never depends on other services.
   age.secrets.alertmanager-env.file = ../../../secrets/alertmanager-env.age;
 
+  # The decrypted secret's path never changes, so a token rotation alone
+  # doesn't restart the unit; keying on the encrypted file's content makes
+  # every rotation take effect on the next deploy.
+  systemd.services.alertmanager.restartTriggers = [ config.age.secrets.alertmanager-env.file ];
+
   services.prometheus.alertmanager = {
     enable = true;
     port = 9093;
