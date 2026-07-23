@@ -6,11 +6,13 @@
 }:
 
 {
-  virtualisation.docker = {
+  # Rootless Podman instead of a rootful Docker daemon: no privileged daemon
+  # to compromise, and being in a "docker"-equivalent group is no longer the
+  # same as having root. Containers run as the invoking user (see
+  # beaverhabits.nix's `podman.user`), using each normal user's
+  # auto-allocated subuid/subgid range (NixOS default, users-groups.nix).
+  virtualisation.podman = {
     enable = true;
-    # nixpkgs' `docker` alias tracks docker_28, which is now marked
-    # insecure/unmaintained; pin to a maintained major version explicitly.
-    package = pkgs.docker_29;
     autoPrune = {
       enable = true;
       dates = "weekly";

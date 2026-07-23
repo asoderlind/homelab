@@ -11,5 +11,6 @@
     ./prometheus.nix
     ./jellyfin.nix
     ./samba.nix
+    ./beaverhabits.nix
   ];
 }
