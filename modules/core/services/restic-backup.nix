@@ -40,11 +40,15 @@
     ];
 
     timerConfig = {
-      OnCalendar = "Sun *-*-* 03:00:00";
-      Persistent = true; # catch up if the host was off on Sunday
+      OnCalendar = "*-*-* 03:00:00";
+      Persistent = true; # catch up if the host was off at 03:00
     };
 
+    # Up to 17 snapshots (~6 months of coverage): a week of dailies for
+    # recent mistakes, then thinning out for slow-burn problems noticed
+    # late. Dedup makes the overlap cheap.
     pruneOpts = [
+      "--keep-daily 7"
       "--keep-weekly 4"
       "--keep-monthly 6"
     ];

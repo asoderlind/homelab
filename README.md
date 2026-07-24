@@ -104,17 +104,23 @@ First-time setup after the initial deploy:
 
 ## Backups (restic → /mnt/backup)
 
-Weekly (Sun 03:00, `Persistent` so missed runs catch up) restic backup of
+Daily (03:00, `Persistent` so missed runs catch up) restic backup of
 `/var/lib/nextcloud` plus a fresh pg_dump
 (`/var/backup/postgresql/nextcloud.sql.gz`) into the encrypted repo
 `/mnt/backup/restic/nextcloud` on the external USB drive. Retention:
-4 weekly + 6 monthly snapshots, pruned and checked after each run.
+7 daily + 4 weekly + 6 monthly snapshots (up to 17, ~6 months of
+coverage), pruned and checked after each run.
+
+This drive lives in the same building as the server, so it does not
+protect against fire/theft/power surge. An off-site copy to Backblaze B2
+is planned as a second restic job — until then, poseidon is the only
+off-site copy.
 
 The repo password is the `restic-password` agenix secret — **also keep a
 copy in the password manager**; without it the repo is unreadable.
 
 If the drive is unplugged the run fails loudly (`SystemdUnitFailed`
-alert); more than 8 days without a successful run fires
+alert); more than 3 days without a successful run fires
 `ResticBackupStale`.
 
 ```sh

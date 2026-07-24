@@ -104,11 +104,12 @@
             }
             {
               alert = "ResticBackupStale";
-              # 8 days: one weekly slot plus a day of slack. Can't fire
-              # before the first successful run (metric absent until then).
-              # Failed runs are covered by SystemdUnitFailed; this catches
-              # the timer never firing at all (host off for weeks).
-              expr = ''time() - restic_backup_last_success_timestamp_seconds{backup="nextcloud"} > 8 * 86400'';
+              # 3 days: two missed daily slots plus slack, so a single
+              # hiccup doesn't page (that's SystemdUnitFailed's job). Can't
+              # fire before the first successful run (metric absent until
+              # then). This catches the timer never firing at all, e.g. the
+              # host being off for days.
+              expr = ''time() - restic_backup_last_success_timestamp_seconds{backup="nextcloud"} > 3 * 86400'';
               for = "1h";
               annotations.summary = "Nextcloud restic backup on {{ $labels.instance }} is stale (>8 days)";
             }
