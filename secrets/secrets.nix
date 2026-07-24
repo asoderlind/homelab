@@ -33,9 +33,16 @@ in
     dell
     axel
   ];
-  # Restic repository encryption password (backup drive repo). Keep an
-  # off-host copy in the password manager - the repo is unreadable without it.
+  # Restic repository encryption password, shared by the local and off-site
+  # repos. Keep an off-host copy in the password manager - neither repo is
+  # readable without it.
   "restic-password.age".publicKeys = [
+    dell
+    axel
+  ];
+  # AWS_ACCESS_KEY_ID=... / AWS_SECRET_ACCESS_KEY=... env file for the
+  # off-site repo in Hetzner Object Storage
+  "restic-offsite-env.age".publicKeys = [
     dell
     axel
   ];

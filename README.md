@@ -111,10 +111,16 @@ Daily (03:00, `Persistent` so missed runs catch up) restic backup of
 7 daily + 4 weekly + 6 monthly snapshots (up to 17, ~6 months of
 coverage), pruned and checked after each run.
 
-This drive lives in the same building as the server, so it does not
-protect against fire/theft/power surge. An off-site copy to Backblaze B2
-is planned as a second restic job — until then, poseidon is the only
-off-site copy.
+A second job (`nextcloud-offsite`, 04:00 daily, same paths and retention)
+pushes an encrypted copy to Hetzner Object Storage, because the USB drive
+shares a building with the server and would not survive fire, theft, or a
+power surge. It is deliberately independent of `/mnt/backup`, so off-site
+backups keep running when the drive is unplugged or dead.
+
+Both repos use the same `restic-password` secret; the off-site one also
+needs `restic-offsite-env` (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`).
+The endpoint and bucket are set at the top of
+`modules/core/services/restic-backup.nix`.
 
 The repo password is the `restic-password` agenix secret — **also keep a
 copy in the password manager**; without it the repo is unreadable.
@@ -124,9 +130,10 @@ alert); more than 3 days without a successful run fires
 `ResticBackupStale`.
 
 ```sh
-sudo systemctl start restic-backups-nextcloud   # manual run (blocks)
-sudo restic-nextcloud snapshots                 # wrapper with repo/password preset
-sudo restic-nextcloud stats
+sudo systemctl start restic-backups-nextcloud           # manual run (blocks)
+sudo systemctl start restic-backups-nextcloud-offsite   # same, off-site repo
+sudo restic-nextcloud snapshots                         # wrapper, repo/password preset
+sudo restic-nextcloud-offsite snapshots
 ```
 
 ### Restore
@@ -135,7 +142,8 @@ sudo restic-nextcloud stats
 sudo nextcloud-restore
 ```
 
-Interactive: lists snapshots, asks which to restore (default `latest`),
+Interactive: asks which repo (local or off-site — pick off-site when the
+USB drive is gone), lists snapshots, asks which to restore (default `latest`),
 requires typing `restore` to confirm, then stops php-fpm/cron, restores
 files with `--delete` (true point-in-time — files created after the
 snapshot are removed), reloads the DB from the snapshot's dump, clears the

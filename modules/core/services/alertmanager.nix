@@ -109,9 +109,11 @@
               # fire before the first successful run (metric absent until
               # then). This catches the timer never firing at all, e.g. the
               # host being off for days.
-              expr = ''time() - restic_backup_last_success_timestamp_seconds{backup="nextcloud"} > 3 * 86400'';
+              # Unlabelled so it covers every restic job (local and offsite)
+              # without needing a rule per repo.
+              expr = "time() - restic_backup_last_success_timestamp_seconds > 3 * 86400";
               for = "1h";
-              annotations.summary = "Nextcloud restic backup on {{ $labels.instance }} is stale (>8 days)";
+              annotations.summary = "restic backup '{{ $labels.backup }}' on {{ $labels.instance }} is stale (>3 days)";
             }
             {
               alert = "SystemdUnitFailed";

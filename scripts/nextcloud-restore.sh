@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Interactive point-in-time restore of Nextcloud from the restic repo on
-# /mnt/backup. Deployed as `nextcloud-restore` on the host via
+# Interactive point-in-time restore of Nextcloud from either restic repo
+# (local USB drive or off-site object storage). Deployed as
+# `nextcloud-restore` on the host via
 # modules/core/services/restic-backup.nix (writeShellApplication).
 set -euo pipefail
 
@@ -9,20 +10,39 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-if ! mountpoint -q /mnt/backup; then
-  echo "backup drive not mounted at /mnt/backup" >&2
-  exit 1
-fi
+echo "Which repository?"
+echo "  1) local    - /mnt/backup on the USB drive (fast)"
+echo "  2) offsite  - Hetzner object storage (slower; use when the drive is gone)"
+read -r -p "Choice [1]: " repo_choice
+case "${repo_choice:-1}" in
+  1 | local)
+    restic="restic-nextcloud"
+    # Only the local repo needs the drive; the off-site one must stay
+    # usable precisely when that drive is unavailable.
+    if ! mountpoint -q /mnt/backup; then
+      echo "backup drive not mounted at /mnt/backup" >&2
+      exit 1
+    fi
+    ;;
+  2 | offsite)
+    restic="restic-nextcloud-offsite"
+    ;;
+  *)
+    echo "invalid choice" >&2
+    exit 1
+    ;;
+esac
 
+echo
 echo "Available snapshots:"
-restic-nextcloud snapshots --compact
+"$restic" snapshots --compact
 echo
 
 read -r -p "Snapshot ID to restore [latest]: " snapshot
 snapshot=${snapshot:-latest}
 
 # Fails (and aborts, set -e) if the ID doesn't exist in the repo.
-restic-nextcloud snapshots "$snapshot" >/dev/null
+"$restic" snapshots "$snapshot" >/dev/null
 
 cat <<EOF
 
@@ -56,7 +76,7 @@ systemctl stop phpfpm-nextcloud nextcloud-cron.timer nextcloud-cron.service
 echo "[2/5] restoring files from '$snapshot'..."
 # restic refuses '--target / --delete' without an explicit filter; the
 # includes also scope what --delete is allowed to remove.
-restic-nextcloud restore "$snapshot" --target / --delete \
+"$restic" restore "$snapshot" --target / --delete \
   --include /var/lib/nextcloud --include /var/backup/postgresql
 chown -R nextcloud:nextcloud /var/lib/nextcloud
 
