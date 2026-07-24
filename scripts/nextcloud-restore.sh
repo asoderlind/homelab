@@ -54,7 +54,10 @@ echo "[1/5] stopping services..."
 systemctl stop phpfpm-nextcloud nextcloud-cron.timer nextcloud-cron.service
 
 echo "[2/5] restoring files from '$snapshot'..."
-restic-nextcloud restore "$snapshot" --target / --delete
+# restic refuses '--target / --delete' without an explicit filter; the
+# includes also scope what --delete is allowed to remove.
+restic-nextcloud restore "$snapshot" --target / --delete \
+  --include /var/lib/nextcloud --include /var/backup/postgresql
 chown -R nextcloud:nextcloud /var/lib/nextcloud
 
 echo "[3/5] restoring database from the snapshot's dump..."
