@@ -41,5 +41,28 @@
         proxyWebsockets = true;
       };
     };
+
+    virtualHosts."jellyfin.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:8096";
+        # Jellyfin's web client keeps a websocket open for playback/session
+        # state; without Upgrade headers it silently degrades.
+        proxyWebsockets = true;
+      };
+    };
+
+    virtualHosts."habits.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      locations."/" = {
+        # beaverhabits runs with --network=host (see beaverhabits.nix), so
+        # its gunicorn listens directly on the host at its default port.
+        proxyPass = "http://127.0.0.1:8080";
+        # NiceGUI apps do all UI updates over a websocket.
+        proxyWebsockets = true;
+      };
+    };
   };
 }
