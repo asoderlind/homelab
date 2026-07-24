@@ -94,6 +94,15 @@
               annotations.summary = "{{ $labels.instance }} {{ $labels.chip }} at {{ $value | printf \"%.0f\" }}C";
             }
             {
+              alert = "NextcloudUnhealthy";
+              # nextcloud_up is 0 when the exporter can't fetch/parse the
+              # serverinfo endpoint; InstanceDown already covers the
+              # exporter process itself being down.
+              expr = ''nextcloud_up == 0'';
+              for = "5m";
+              annotations.summary = "Nextcloud serverinfo check failing on {{ $labels.instance }}";
+            }
+            {
               alert = "SystemdUnitFailed";
               expr = ''node_systemd_unit_state{state="failed"} == 1'';
               for = "5m";

@@ -15,5 +15,6 @@
     ./smart.nix
     ./alertmanager.nix
     ./nginx.nix
+    ./nextcloud.nix
   ];
 }

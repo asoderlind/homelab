@@ -23,4 +23,14 @@ in
     dell
     axel
   ];
+  # Nextcloud admin account password (services.nextcloud.config.adminpassFile)
+  "nextcloud-admin-pass.age".publicKeys = [
+    dell
+    axel
+  ];
+  # Random token for the serverinfo app, read by the prometheus nextcloud exporter
+  "nextcloud-serverinfo-token.age".publicKeys = [
+    dell
+    axel
+  ];
 }
