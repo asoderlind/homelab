@@ -53,6 +53,22 @@
       };
     };
 
+    # The nextcloud module generates this vhost itself (php-fpm upstream,
+    # well-known redirects, client_max_body_size, see nextcloud.nix); we
+    # only add TLS via the shared wildcard cert plus poseidon's security
+    # headers.
+    virtualHosts."${config.services.nextcloud.hostName}" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      extraConfig = ''
+        add_header Referrer-Policy "no-referrer" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+      '';
+    };
+
     virtualHosts."habits.soderlind.dev" = {
       forceSSL = true;
       useACMEHost = "soderlind.dev";

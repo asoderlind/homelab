@@ -81,22 +81,6 @@
     datepattern = ,?\s*"time"\s*:\s*"%%Y-%%m-%%d[T ]%%H:%%M:%%S(%%z)?"
   '';
 
-  # The nextcloud module generates this vhost itself (php-fpm upstream,
-  # well-known redirects, client_max_body_size); we only add TLS via the
-  # shared wildcard cert (DNS-01 - per-vhost enableACME/HTTP-01 can't work
-  # on this tailnet-only host) plus poseidon's security headers.
-  services.nginx.virtualHosts."${config.services.nextcloud.hostName}" = {
-    forceSSL = true;
-    useACMEHost = "soderlind.dev";
-    extraConfig = ''
-      add_header Referrer-Policy "no-referrer" always;
-      add_header X-Content-Type-Options "nosniff" always;
-      add_header X-Frame-Options "SAMEORIGIN" always;
-      add_header X-XSS-Protection "1; mode=block" always;
-      add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
-    '';
-  };
-
   services.prometheus.exporters.nextcloud = {
     enable = true;
     listenAddress = "127.0.0.1";

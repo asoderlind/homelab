@@ -63,7 +63,7 @@
           rules = [
             {
               alert = "InstanceDown";
-              expr = ''up == 0'';
+              expr = "up == 0";
               for = "5m";
               annotations.summary = "{{ $labels.instance }} ({{ $labels.job }}) is unreachable";
             }
@@ -83,13 +83,13 @@
             }
             {
               alert = "SmartFailure";
-              expr = ''smartctl_device_smart_status != 1'';
+              expr = "smartctl_device_smart_status != 1";
               for = "5m";
               annotations.summary = "SMART reports failing disk {{ $labels.device }} on {{ $labels.instance }}";
             }
             {
               alert = "HighTemperature";
-              expr = ''node_hwmon_temp_celsius > 80'';
+              expr = "node_hwmon_temp_celsius > 80";
               for = "10m";
               annotations.summary = "{{ $labels.instance }} {{ $labels.chip }} at {{ $value | printf \"%.0f\" }}C";
             }
@@ -98,7 +98,7 @@
               # nextcloud_up is 0 when the exporter can't fetch/parse the
               # serverinfo endpoint; InstanceDown already covers the
               # exporter process itself being down.
-              expr = ''nextcloud_up == 0'';
+              expr = "nextcloud_up == 0";
               for = "5m";
               annotations.summary = "Nextcloud serverinfo check failing on {{ $labels.instance }}";
             }
