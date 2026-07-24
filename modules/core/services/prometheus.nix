@@ -9,7 +9,13 @@
     exporters = {
       node = {
         enable = true;
-        enabledCollectors = [ "systemd" ];
+        enabledCollectors = [
+          "systemd"
+          # Ad-hoc metrics dropped as *.prom files, e.g. the restic backup
+          # freshness timestamp (see restic-backup.nix).
+          "textfile"
+        ];
+        extraFlags = [ "--collector.textfile.directory=/var/lib/prometheus-node-exporter/textfiles" ];
         port = 9002;
       };
     };

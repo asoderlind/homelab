@@ -103,6 +103,16 @@
               annotations.summary = "Nextcloud serverinfo check failing on {{ $labels.instance }}";
             }
             {
+              alert = "ResticBackupStale";
+              # 8 days: one weekly slot plus a day of slack. Can't fire
+              # before the first successful run (metric absent until then).
+              # Failed runs are covered by SystemdUnitFailed; this catches
+              # the timer never firing at all (host off for weeks).
+              expr = ''time() - restic_backup_last_success_timestamp_seconds{backup="nextcloud"} > 8 * 86400'';
+              for = "1h";
+              annotations.summary = "Nextcloud restic backup on {{ $labels.instance }} is stale (>8 days)";
+            }
+            {
               alert = "SystemdUnitFailed";
               expr = ''node_systemd_unit_state{state="failed"} == 1'';
               for = "5m";

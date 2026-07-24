@@ -102,6 +102,41 @@ First-time setup after the initial deploy:
   in `modules/core/services/nextcloud.nix` one major version at a time and
   deploy.
 
+## Backups (restic → /mnt/backup)
+
+Weekly (Sun 03:00, `Persistent` so missed runs catch up) restic backup of
+`/var/lib/nextcloud` plus a fresh pg_dump
+(`/var/backup/postgresql/nextcloud.sql.gz`) into the encrypted repo
+`/mnt/backup/restic/nextcloud` on the external USB drive. Retention:
+4 weekly + 6 monthly snapshots, pruned and checked after each run.
+
+The repo password is the `restic-password` agenix secret — **also keep a
+copy in the password manager**; without it the repo is unreadable.
+
+If the drive is unplugged the run fails loudly (`SystemdUnitFailed`
+alert); more than 8 days without a successful run fires
+`ResticBackupStale`.
+
+```sh
+sudo systemctl start restic-backups-nextcloud   # manual run (blocks)
+sudo restic-nextcloud snapshots                 # wrapper with repo/password preset
+sudo restic-nextcloud stats
+```
+
+### Restore
+
+```sh
+sudo nextcloud-restore
+```
+
+Interactive: lists snapshots, asks which to restore (default `latest`),
+requires typing `restore` to confirm, then stops php-fpm/cron, restores
+files with `--delete` (true point-in-time — files created after the
+snapshot are removed), reloads the DB from the snapshot's dump, clears the
+Redis cache, restarts services, and re-scans files. Source:
+`scripts/nextcloud-restore.sh`. For a non-destructive look inside a
+snapshot instead: `sudo restic-nextcloud restore latest --target /tmp/restore`.
+
 ## Monitoring
 
 Prometheus (`:9001`) + Alertmanager → Telegram. Alert rules live in

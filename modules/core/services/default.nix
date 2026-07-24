@@ -16,5 +16,6 @@
     ./alertmanager.nix
     ./nginx.nix
     ./nextcloud.nix
+    ./restic-backup.nix
   ];
 }

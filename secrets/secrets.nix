@@ -33,4 +33,10 @@ in
     dell
     axel
   ];
+  # Restic repository encryption password (backup drive repo). Keep an
+  # off-host copy in the password manager - the repo is unreadable without it.
+  "restic-password.age".publicKeys = [
+    dell
+    axel
+  ];
 }
