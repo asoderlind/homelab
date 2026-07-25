@@ -36,7 +36,7 @@
           }
           {
             targets = [ "192.168.1.98:9100" ];
-            labels.instance = "rpi4";
+            labels.instance = "rpi3";
           }
         ];
       }

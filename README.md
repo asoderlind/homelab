@@ -6,6 +6,25 @@ Cloudflare) and nothing but SSH is exposed outside `tailscale0`.
 
 Most things are declarative, but a few steps are manual. This is the list.
 
+## Hardware
+
+The Dell runs everything (NixOS + all services); the two Raspberry Pis are
+separate Debian machines scraped as extra `node` targets by Prometheus (see
+`modules/core/services/prometheus.nix`).
+
+| Instance | Machine | CPU | RAM | Storage | OS |
+| --- | --- | --- | --- | --- | --- |
+| `dell` | Dell OptiPlex 3040 | Intel Core i5-6500T — 4C/4T, 2.5 GHz (Skylake) | 8 GB | 500 GB internal SATA HDD (Toshiba MQ01ACF050) | NixOS 26.05 |
+| `rpi5` | Raspberry Pi 5 Model B (Rev 1.1) | Broadcom BCM2712 — quad Cortex-A76, 2.4 GHz | 16 GB | 32 GB microSD | Debian 12 (bookworm) |
+| `rpi3` | Raspberry Pi 3 Model B (Rev 1.2) | Broadcom BCM2837 — quad Cortex-A53, 1.2 GHz | 1 GB | 16 GB microSD | Debian 13 (trixie) |
+
+The `dell`/`rpi5`/`rpi3` names are the Prometheus `instance` labels.
+
+**Backup HDD**: a Western Digital 2 TB USB drive (WD20EARX-00PASB0) mounted at
+`/mnt/backup` on the Dell, holding the local restic repo (see
+[Backups](#backups-restic--mntbackup)). Mounted `nofail`; the backup jobs check
+the mountpoint and fail loudly if it's absent.
+
 ## Deploying
 
 Always done manually, from the repo root:
