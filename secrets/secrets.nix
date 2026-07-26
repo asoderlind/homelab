@@ -46,4 +46,10 @@ in
     dell
     axel
   ];
+  # WireGuard private key from the Proton VPN config generated at
+  # account.protonvpn.com (key only, one line)
+  "protonvpn-wg-key.age".publicKeys = [
+    dell
+    axel
+  ];
 }

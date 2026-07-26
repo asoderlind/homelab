@@ -73,7 +73,9 @@
       forceSSL = true;
       useACMEHost = "soderlind.dev";
       locations."/" = {
-        proxyPass = "http://127.0.0.1:${toString config.services.transmission.settings.rpc-port}";
+        # Transmission lives in the protonvpn netns; 10.233.0.2 is its end
+        # of the veth pair (see protonvpn.nix).
+        proxyPass = "http://10.233.0.2:${toString config.services.transmission.settings.rpc-port}";
       };
     };
 

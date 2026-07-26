@@ -12,9 +12,10 @@
   # services it is reachable solely over Tailscale.
   services.transmission = {
     enable = true;
-    # Peer port (51413) open on all interfaces so public swarms can reach us;
-    # the RPC port stays closed and is only proxied by nginx.
-    openPeerPorts = true;
+    # No host firewall ports: peer traffic arrives through the Proton VPN
+    # tunnel inside the netns (see protonvpn.nix), and the RPC port is only
+    # ever reached via nginx over the veth pair.
+    openPeerPorts = false;
     openRPCPort = false;
 
     # The exfat mount forces uid=1000/gid=100 with umask=0022 (see
@@ -43,9 +44,14 @@
       watch-dir = "/mnt/backup/media/torrents/watch";
       watch-dir-enabled = true;
 
-      rpc-bind-address = "127.0.0.1";
+      # "All interfaces" is namespace-local here: only the veth from the
+      # host (nginx) and namespace loopback (the natpmp loop) can reach it.
+      rpc-bind-address = "0.0.0.0";
+      rpc-whitelist = "127.0.0.1,10.233.0.1";
+      rpc-whitelist-enabled = true;
       # nginx proxies with Host: transmission.soderlind.dev, which is not in
-      # transmission's default host whitelist (localhost only).
+      # transmission's default host whitelist (localhost only). IP-literal
+      # Hosts (transmission-remote inside the netns) always pass the check.
       rpc-host-whitelist = "transmission.soderlind.dev";
       rpc-host-whitelist-enabled = true;
 
@@ -58,6 +64,21 @@
   # /mnt/backup is nofail: without this the daemon would start against an
   # empty /mnt/backup directory and download onto the root filesystem.
   systemd.services.transmission.unitConfig.RequiresMountsFor = [ "/mnt/backup" ];
+
+  # Confine the daemon to the Proton VPN namespace (see protonvpn.nix): its
+  # only egress is the tunnel, and it lives and dies with it.
+  systemd.services.transmission = {
+    bindsTo = [ "wireguard-protonvpn.service" ];
+    after = [ "wireguard-protonvpn.service" ];
+    serviceConfig = {
+      NetworkNamespacePath = "/run/netns/protonvpn";
+      # The sandbox binds the host's /etc read-only, whose resolv.conf
+      # points at Tailscale MagicDNS - unreachable from the namespace.
+      # Overlay the namespace resolver; the more specific bind mounts after
+      # the module's /etc and wins.
+      BindReadOnlyPaths = [ "/etc/netns/protonvpn/resolv.conf:/etc/resolv.conf" ];
+    };
+  };
 
   # Upstream gives transmission-setup only before=/partOf=, so nothing ever
   # pulls it in; require it from the daemon so it actually runs. It must obey

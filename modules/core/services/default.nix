@@ -18,5 +18,6 @@
     ./nextcloud.nix
     ./restic-backup.nix
     ./transmission.nix
+    ./protonvpn.nix
   ];
 }
