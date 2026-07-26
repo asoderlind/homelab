@@ -69,6 +69,14 @@
       '';
     };
 
+    virtualHosts."transmission.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString config.services.transmission.settings.rpc-port}";
+      };
+    };
+
     virtualHosts."habits.soderlind.dev" = {
       forceSSL = true;
       useACMEHost = "soderlind.dev";
