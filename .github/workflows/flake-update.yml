@@ -1,0 +1,91 @@
+# Weekly flake.lock update: builds the system closure before and after the
+# update, and opens a PR whose body contains per-input compare links and the
+# closure diff. CI validation happens here (not in ci.yml) because PRs
+# created with the default GITHUB_TOKEN do not trigger pull_request
+# workflows. Deploying stays manual.
+name: flake-update
+
+on:
+  schedule:
+    - cron: "0 5 * * 1" # Mondays 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: flake-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+
+      - name: Build current system closure
+        run: |
+          nix build .#nixosConfigurations.nixos.config.system.build.toplevel \
+            --out-link result-old --print-build-logs
+
+      - name: Update flake.lock
+        id: update
+        run: |
+          cp flake.lock flake.lock.old
+          nix flake update
+          if git diff --quiet flake.lock; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build updated system closure
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          nix build .#nixosConfigurations.nixos.config.system.build.toplevel \
+            --out-link result-new --print-build-logs
+
+      - name: Generate PR body
+        if: steps.update.outputs.changed == 'true'
+        env:
+          NO_COLOR: "1"
+        run: |
+          {
+            echo "Automated weekly \`nix flake update\`. Both the old and new"
+            echo "system closures built successfully in CI. Review the input"
+            echo "ranges and the closure diff, merge, then deploy manually."
+            echo
+            echo "### Input changes"
+            jq -r '.nodes | to_entries[]
+              | select(.value.locked.type? == "github")
+              | [.key, "\(.value.locked.owner)/\(.value.locked.repo)", .value.locked.rev]
+              | @tsv' flake.lock |
+          while IFS=$'\t' read -r name repo new_rev; do
+            old_rev=$(jq -r --arg n "$name" '.nodes[$n].locked.rev // empty' flake.lock.old)
+            if [ -z "$old_rev" ]; then
+              echo "- \`$name\`: new input at \`${new_rev:0:11}\`"
+            elif [ "$old_rev" != "$new_rev" ]; then
+              echo "- \`$name\`: [\`${old_rev:0:11}\` → \`${new_rev:0:11}\`](https://github.com/$repo/compare/$old_rev...$new_rev)"
+            fi
+          done
+            echo
+            echo "### Closure diff"
+            echo '```'
+            nix store diff-closures ./result-old ./result-new
+            echo '```'
+          } > pr-body.md
+
+      - name: Open pull request
+        if: steps.update.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: automated/flake-update
+          title: "chore: update flake.lock"
+          commit-message: "chore: update flake.lock"
+          body-path: pr-body.md
+          add-paths: flake.lock
+          delete-branch: true
