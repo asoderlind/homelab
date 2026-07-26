@@ -71,11 +71,6 @@
     bindsTo = [ "wireguard-protonvpn.service" ];
     after = [ "wireguard-protonvpn.service" ];
     serviceConfig = {
-      # The module's sandbox only bind-mounts download/incomplete/watch dirs
-      # writable; anything else shows up read-only, so choosing a per-torrent
-      # location elsewhere (e.g. /mnt/backup/media/TV Shows/...) fails with
-      # EROFS. Expose the whole media tree instead.
-      BindPaths = [ "/mnt/backup/media" ];
       NetworkNamespacePath = "/run/netns/protonvpn";
       # The sandbox binds the host's /etc read-only, whose resolv.conf
       # points at Tailscale MagicDNS - unreachable from the namespace.
