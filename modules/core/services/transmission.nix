@@ -32,7 +32,7 @@
     downloadDirPermissions = "755";
 
     settings = {
-      download-dir = "/mnt/backup/media/torrents";
+      download-dir = "/mnt/backup/media/Torrents";
       # Keep in-progress downloads on the internal disk: torrents do heavy
       # random writes that exfat-over-USB handles poorly; the finished file
       # is moved to the media drive in one sequential pass.
@@ -41,7 +41,7 @@
 
       # .torrent files dropped here (e.g. via the samba media share) start
       # automatically.
-      watch-dir = "/mnt/backup/media/torrents/watch";
+      watch-dir = "/mnt/backup/media/Torrents/watch";
       watch-dir-enabled = true;
 
       # "All interfaces" is namespace-local here: only the veth from the
