@@ -33,12 +33,8 @@
     extraAppsEnable = true;
     extraApps = with config.services.nextcloud.package.packages.apps; {
       inherit
-        calendar
         contacts
-        deck
-        mail
         notes
-        music
         ;
     };
 
