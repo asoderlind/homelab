@@ -20,5 +20,6 @@
     ./transmission.nix
     ./protonvpn.nix
     ./actual.nix
+    ./kavita.nix
   ];
 }

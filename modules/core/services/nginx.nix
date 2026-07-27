@@ -92,6 +92,17 @@
       };
     };
 
+    virtualHosts."kavita.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString config.services.kavita.settings.Port}";
+        # Kavita pushes scan/reading events to the UI over a SignalR
+        # websocket.
+        proxyWebsockets = true;
+      };
+    };
+
     virtualHosts."habits.soderlind.dev" = {
       forceSSL = true;
       useACMEHost = "soderlind.dev";

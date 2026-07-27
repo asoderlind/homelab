@@ -52,4 +52,10 @@ in
     dell
     axel
   ];
+  # Kavita JWT signing key (services.kavita.tokenKeyFile), 64 random bytes
+  # base64-encoded. Losing it only invalidates active sessions.
+  "kavita-token.age".publicKeys = [
+    dell
+    axel
+  ];
 }

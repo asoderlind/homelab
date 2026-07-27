@@ -199,6 +199,77 @@ in
     '';
   };
 
+  # Kavita follows the actual pattern exactly (SQLite state, stop the
+  # service for the seconds the snapshot takes). Only the DB, covers and
+  # bookmarks are worth keeping - cache/ and temp/ are regenerated reader
+  # scratch space; the manga files themselves live on /mnt/backup/media
+  # like the rest of the media tree and are not backed up.
+  services.restic.backups.kavita = {
+    repository = "/mnt/backup/restic/kavita";
+    passwordFile = config.age.secrets.restic-password.path;
+    initialize = true;
+
+    paths = [ "/var/lib/kavita" ];
+    exclude = [
+      "/var/lib/kavita/config/cache"
+      "/var/lib/kavita/config/temp"
+    ];
+    pruneOpts = retention;
+    checkOpts = [ "--with-cache" ];
+
+    timerConfig = {
+      # 03:45: clear of nextcloud (03:00) and actual (03:30).
+      OnCalendar = "*-*-* 03:45:00";
+      Persistent = true;
+    };
+
+    backupPrepareCommand = ''
+      set -eu
+      # Same nofail-mountpoint guard as the other local jobs: never write
+      # into an empty /mnt/backup on the root fs.
+      if ! mountpoint -q /mnt/backup; then
+        echo "backup drive not mounted at /mnt/backup, refusing to run" >&2
+        exit 1
+      fi
+      systemctl stop kavita.service
+    '';
+    backupCleanupCommand = ''
+      systemctl start kavita.service
+      ${freshnessMetric "kavita"}
+    '';
+  };
+
+  services.restic.backups.kavita-offsite = {
+    repository = "s3:https://${offsiteEndpoint}/${offsiteBucket}/kavita";
+    passwordFile = config.age.secrets.restic-password.path;
+    environmentFile = config.age.secrets.restic-offsite-env.path;
+    initialize = true;
+
+    paths = [ "/var/lib/kavita" ];
+    exclude = [
+      "/var/lib/kavita/config/cache"
+      "/var/lib/kavita/config/temp"
+    ];
+    pruneOpts = retention;
+    checkOpts = [ "--with-cache" ];
+
+    timerConfig = {
+      OnCalendar = "*-*-* 04:45:00";
+      Persistent = true;
+    };
+
+    # No mount guard: like the other offsite jobs, deliberately independent
+    # of /mnt/backup.
+    backupPrepareCommand = ''
+      set -eu
+      systemctl stop kavita.service
+    '';
+    backupCleanupCommand = ''
+      systemctl start kavita.service
+      ${freshnessMetric "kavita-offsite"}
+    '';
+  };
+
   systemd.tmpfiles.rules = [ "d /var/lib/prometheus-node-exporter/textfiles 0755 root root -" ];
 
   # Attempt the mount when the backup starts (nofail means nothing auto-mounts
@@ -216,6 +287,13 @@ in
 
   # Same mount handling for the local actual job (see comment above).
   systemd.services.restic-backups-actual = {
+    path = [ pkgs.util-linux ];
+    wants = [ "mnt-backup.mount" ];
+    after = [ "mnt-backup.mount" ];
+  };
+
+  # And for the local kavita job.
+  systemd.services.restic-backups-kavita = {
     path = [ pkgs.util-linux ];
     wants = [ "mnt-backup.mount" ];
     after = [ "mnt-backup.mount" ];
