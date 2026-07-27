@@ -19,5 +19,6 @@
     ./restic-backup.nix
     ./transmission.nix
     ./protonvpn.nix
+    ./actual.nix
   ];
 }

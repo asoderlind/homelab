@@ -79,6 +79,19 @@
       };
     };
 
+    virtualHosts."actual.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString config.services.actual.settings.port}";
+        # Sync uploads/downloads move whole budget files; the nginx-module
+        # default client_max_body_size (10m) is too tight for larger budgets.
+        extraConfig = ''
+          client_max_body_size 50m;
+        '';
+      };
+    };
+
     virtualHosts."habits.soderlind.dev" = {
       forceSSL = true;
       useACMEHost = "soderlind.dev";

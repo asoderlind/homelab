@@ -135,6 +135,70 @@ in
     backupCleanupCommand = freshnessMetric "nextcloud-offsite";
   };
 
+  # Actual Budget state is all SQLite; a live-file copy is only guaranteed
+  # crash-consistent if nothing is writing, so both jobs stop the service
+  # for the duration. The dataset is tiny, so that's seconds of downtime at
+  # night. Cleanup (which also runs on failure) restarts it unconditionally
+  # before touching the freshness metric, so the app always comes back even
+  # when the backup itself failed.
+  services.restic.backups.actual = {
+    repository = "/mnt/backup/restic/actual";
+    passwordFile = config.age.secrets.restic-password.path;
+    initialize = true;
+
+    paths = [ "/var/lib/actual" ];
+    pruneOpts = retention;
+    checkOpts = [ "--with-cache" ];
+
+    timerConfig = {
+      # 03:30: the nextcloud local job (03:00) takes minutes; stay clear of it.
+      OnCalendar = "*-*-* 03:30:00";
+      Persistent = true;
+    };
+
+    backupPrepareCommand = ''
+      set -eu
+      # Same nofail-mountpoint guard as the nextcloud job: never write into
+      # an empty /mnt/backup on the root fs.
+      if ! mountpoint -q /mnt/backup; then
+        echo "backup drive not mounted at /mnt/backup, refusing to run" >&2
+        exit 1
+      fi
+      systemctl stop actual.service
+    '';
+    backupCleanupCommand = ''
+      systemctl start actual.service
+      ${freshnessMetric "actual"}
+    '';
+  };
+
+  services.restic.backups.actual-offsite = {
+    repository = "s3:https://${offsiteEndpoint}/${offsiteBucket}/actual";
+    passwordFile = config.age.secrets.restic-password.path;
+    environmentFile = config.age.secrets.restic-offsite-env.path;
+    initialize = true;
+
+    paths = [ "/var/lib/actual" ];
+    pruneOpts = retention;
+    checkOpts = [ "--with-cache" ];
+
+    timerConfig = {
+      OnCalendar = "*-*-* 04:30:00";
+      Persistent = true;
+    };
+
+    # No mount guard: like nextcloud-offsite, this job is deliberately
+    # independent of /mnt/backup.
+    backupPrepareCommand = ''
+      set -eu
+      systemctl stop actual.service
+    '';
+    backupCleanupCommand = ''
+      systemctl start actual.service
+      ${freshnessMetric "actual-offsite"}
+    '';
+  };
+
   systemd.tmpfiles.rules = [ "d /var/lib/prometheus-node-exporter/textfiles 0755 root root -" ];
 
   # Attempt the mount when the backup starts (nofail means nothing auto-mounts
@@ -145,6 +209,13 @@ in
   systemd.services.restic-backups-nextcloud = {
     # mountpoint(1) for the prepare hook: util-linux is not in the default
     # unit PATH, and 'command not found' (127) would read as 'not mounted'.
+    path = [ pkgs.util-linux ];
+    wants = [ "mnt-backup.mount" ];
+    after = [ "mnt-backup.mount" ];
+  };
+
+  # Same mount handling for the local actual job (see comment above).
+  systemd.services.restic-backups-actual = {
     path = [ pkgs.util-linux ];
     wants = [ "mnt-backup.mount" ];
     after = [ "mnt-backup.mount" ];
