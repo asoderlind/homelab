@@ -75,7 +75,9 @@ jobs:
             echo
             echo "### Closure diff"
             echo '```'
-            nix store diff-closures ./result-old ./result-new
+            # Nix colors this output even when piped; strip the ANSI codes.
+            nix store diff-closures ./result-old ./result-new |
+              sed 's/\x1b\[[0-9;]*m//g'
             echo '```'
           } > pr-body.md
 
