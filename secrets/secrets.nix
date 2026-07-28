@@ -58,4 +58,11 @@ in
     dell
     axel
   ];
+  # ADMIN_USERNAME=... / ADMIN_PASSWORD=... env file for Miniflux's
+  # first-run admin account (change the password in-app afterwards; this
+  # file is only read again if the user table is ever empty).
+  "miniflux-admin-creds.age".publicKeys = [
+    dell
+    axel
+  ];
 }

@@ -61,6 +61,7 @@ Transmission which lives in a network namespace):
 | `habits.soderlind.dev` | `127.0.0.1:8080` | beaverhabits runs `--network=host` |
 | `actual.soderlind.dev` | `127.0.0.1:5006` | 50m body size for budget file sync |
 | `kavita.soderlind.dev` | `127.0.0.1:5000` | websockets for scan/reading events |
+| `rss.soderlind.dev` | `127.0.0.1:18069` | Miniflux; security headers from poseidon |
 | `transmission.soderlind.dev` | `10.233.0.2:9091` | via veth into the VPN netns, see below |
 
 Samba (media share) and the Prometheus/exporter ports follow the same
@@ -247,9 +248,11 @@ First-time setup after the initial deploy:
 ## Backups (restic → /mnt/backup)
 
 Daily (03:00, `Persistent` so missed runs catch up) restic backup of
-`/var/lib/nextcloud` plus a fresh pg_dump
-(`/var/backup/postgresql/nextcloud.sql.gz`) into the encrypted repo
-`/mnt/backup/restic/nextcloud` on the external USB drive. Retention:
+`/var/lib/nextcloud` plus fresh pg_dumps of the nextcloud **and miniflux**
+databases (`/var/backup/postgresql/*.sql.gz`) into the encrypted repo
+`/mnt/backup/restic/nextcloud` on the external USB drive. Miniflux's
+entire state is its database, so the dump riding along here is the whole
+miniflux backup. Retention:
 7 daily + 4 weekly + 6 monthly snapshots (up to 17, ~6 months of
 coverage), pruned and checked after each run.
 
@@ -320,6 +323,15 @@ library in the admin UI pointing at `/mnt/backup/media/manga` (create the
 directory first; the `kavita` user only needs read access, which the
 media tree's default permissions provide). The only repo secret is
 `kavita-token` (JWT signing key); rotating it just logs everyone out.
+
+## Miniflux (rss.soderlind.dev)
+
+RSS reader, adapted from the poseidon repo. The admin account is created
+on first start from the `miniflux-admin-creds` agenix secret
+(`agenix -d secrets/miniflux-admin-creds.age` on the laptop shows it);
+change the password in-app afterwards — the file is only read again if
+the user table is ever empty. State is the local `miniflux` postgres
+database, backed up via the nextcloud restic jobs (see above).
 
 ## Monitoring
 

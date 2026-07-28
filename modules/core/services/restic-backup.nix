@@ -12,7 +12,7 @@ let
   # drift apart.
   backupPaths = [
     "/var/lib/nextcloud" # data + config
-    "/var/backup/postgresql" # nextcloud.sql.gz from the prepare hook
+    "/var/backup/postgresql" # nextcloud + miniflux .sql.gz from the prepare hook
   ];
   backupExclude = [
     # Regenerable thumbnails; can be many GB and churn constantly.
@@ -27,9 +27,11 @@ let
     "--keep-monthly 6"
   ];
 
-  # Fresh DB dump; systemctl blocks until the oneshot finishes and
-  # propagates failure, so the dump is always complete before the snapshot.
-  dumpDatabase = "systemctl start postgresqlBackup-nextcloud.service";
+  # Fresh DB dumps; systemctl blocks until the oneshots finish and
+  # propagates failure, so the dumps are always complete before the
+  # snapshot. Miniflux's entire state is its database, so its dump riding
+  # along in the nextcloud jobs is the whole miniflux backup.
+  dumpDatabase = "systemctl start postgresqlBackup-nextcloud.service postgresqlBackup-miniflux.service";
 
   # Freshness metric for the textfile collector, feeding the
   # ResticBackupStale alert; postStop also runs on failure, hence the
@@ -62,13 +64,17 @@ in
   # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY for the off-site S3 repo.
   age.secrets.restic-offsite-env.file = ../../../secrets/restic-offsite-env.age;
 
-  # pg_dump of the nextcloud DB -> /var/backup/postgresql/nextcloud.sql.gz
-  # (atomic rename, previous copy kept as .prev). startAt = [] means no timer
-  # of its own: it only runs synchronously from the restic prepare hooks. The
-  # dump also doubles as a local plaintext copy if the backup drive dies.
+  # pg_dump of the nextcloud + miniflux DBs -> /var/backup/postgresql/
+  # <db>.sql.gz (atomic rename, previous copy kept as .prev). startAt = []
+  # means no timer of its own: they only run synchronously from the restic
+  # prepare hooks. The dumps also double as a local plaintext copy if the
+  # backup drive dies.
   services.postgresqlBackup = {
     enable = true;
-    databases = [ "nextcloud" ];
+    databases = [
+      "nextcloud"
+      "miniflux"
+    ];
     startAt = [ ];
   };
 

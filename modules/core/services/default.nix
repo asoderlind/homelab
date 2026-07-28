@@ -21,5 +21,6 @@
     ./protonvpn.nix
     ./actual.nix
     ./kavita.nix
+    ./miniflux.nix
   ];
 }
