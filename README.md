@@ -62,6 +62,7 @@ Transmission which lives in a network namespace):
 | `actual.soderlind.dev` | `127.0.0.1:5006` | 50m body size for budget file sync |
 | `kavita.soderlind.dev` | `127.0.0.1:5000` | websockets for scan/reading events |
 | `rss.soderlind.dev` | `127.0.0.1:18069` | Miniflux; security headers from poseidon |
+| `music.soderlind.dev` | `127.0.0.1:4533` | Navidrome; Subsonic apps use the same URL |
 | `transmission.soderlind.dev` | `10.233.0.2:9091` | via veth into the VPN netns, see below |
 
 Samba (media share) and the Prometheus/exporter ports follow the same
@@ -273,6 +274,12 @@ excluded), stopping `kavita.service` the same way. The manga files
 themselves live under `/mnt/backup/media` and, like the rest of the media
 tree, are not backed up.
 
+Navidrome the same again: a `navidrome` job pair (local 03:15, off-site
+04:15) for `/var/lib/navidrome` (SQLite DB — the regenerable
+image/transcode `cache/` excluded), stopping `navidrome.service` for the
+snapshot. The music files live under `/mnt/backup/media` and are not
+backed up.
+
 All repos use the same `restic-password` secret; the off-site ones also
 need `restic-offsite-env` (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`).
 The endpoint and bucket are set at the top of
@@ -332,6 +339,17 @@ on first start from the `miniflux-admin-creds` agenix secret
 change the password in-app afterwards — the file is only read again if
 the user table is ever empty. State is the local `miniflux` postgres
 database, backed up via the nextcloud restic jobs (see above).
+
+## Navidrome (music.soderlind.dev)
+
+Music streaming server; Subsonic-compatible mobile apps (Symfonium,
+substreamer, play:Sub, …) log in with the same URL and account. Same
+first-visit caveat as Actual and Kavita: **create the admin account at
+`https://music.soderlind.dev` right after the first deploy** — until then
+anyone on the tailnet could claim it. The library is
+`/mnt/backup/media/music` (create the directory first; the `navidrome`
+user only needs read access, which the media tree's default permissions
+provide). No secrets in the repo.
 
 ## Monitoring
 

@@ -276,6 +276,70 @@ in
     '';
   };
 
+  # Navidrome too (SQLite state, stop the service for the seconds the
+  # snapshot takes). Only the DB is worth keeping - cache/ is regenerable
+  # image/transcode scratch; the music files themselves live on
+  # /mnt/backup/media like the rest of the media tree and are not backed up.
+  services.restic.backups.navidrome = {
+    repository = "/mnt/backup/restic/navidrome";
+    passwordFile = config.age.secrets.restic-password.path;
+    initialize = true;
+
+    paths = [ "/var/lib/navidrome" ];
+    exclude = [ "/var/lib/navidrome/cache" ];
+    pruneOpts = retention;
+    checkOpts = [ "--with-cache" ];
+
+    timerConfig = {
+      # 03:15: clear of nextcloud (03:00), actual (03:30) and kavita (03:45).
+      OnCalendar = "*-*-* 03:15:00";
+      Persistent = true;
+    };
+
+    backupPrepareCommand = ''
+      set -eu
+      # Same nofail-mountpoint guard as the other local jobs: never write
+      # into an empty /mnt/backup on the root fs.
+      if ! mountpoint -q /mnt/backup; then
+        echo "backup drive not mounted at /mnt/backup, refusing to run" >&2
+        exit 1
+      fi
+      systemctl stop navidrome.service
+    '';
+    backupCleanupCommand = ''
+      systemctl start navidrome.service
+      ${freshnessMetric "navidrome"}
+    '';
+  };
+
+  services.restic.backups.navidrome-offsite = {
+    repository = "s3:https://${offsiteEndpoint}/${offsiteBucket}/navidrome";
+    passwordFile = config.age.secrets.restic-password.path;
+    environmentFile = config.age.secrets.restic-offsite-env.path;
+    initialize = true;
+
+    paths = [ "/var/lib/navidrome" ];
+    exclude = [ "/var/lib/navidrome/cache" ];
+    pruneOpts = retention;
+    checkOpts = [ "--with-cache" ];
+
+    timerConfig = {
+      OnCalendar = "*-*-* 04:15:00";
+      Persistent = true;
+    };
+
+    # No mount guard: like the other offsite jobs, deliberately independent
+    # of /mnt/backup.
+    backupPrepareCommand = ''
+      set -eu
+      systemctl stop navidrome.service
+    '';
+    backupCleanupCommand = ''
+      systemctl start navidrome.service
+      ${freshnessMetric "navidrome-offsite"}
+    '';
+  };
+
   systemd.tmpfiles.rules = [ "d /var/lib/prometheus-node-exporter/textfiles 0755 root root -" ];
 
   # Attempt the mount when the backup starts (nofail means nothing auto-mounts
@@ -300,6 +364,13 @@ in
 
   # And for the local kavita job.
   systemd.services.restic-backups-kavita = {
+    path = [ pkgs.util-linux ];
+    wants = [ "mnt-backup.mount" ];
+    after = [ "mnt-backup.mount" ];
+  };
+
+  # And for the local navidrome job.
+  systemd.services.restic-backups-navidrome = {
     path = [ pkgs.util-linux ];
     wants = [ "mnt-backup.mount" ];
     after = [ "mnt-backup.mount" ];

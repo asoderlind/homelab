@@ -120,6 +120,17 @@
       '';
     };
 
+    virtualHosts."music.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString config.services.navidrome.settings.Port}";
+        # No proxyWebsockets: Navidrome pushes UI/scan events over SSE, and
+        # marks those responses X-Accel-Buffering: no itself, so nginx's
+        # default buffering doesn't stall them either.
+      };
+    };
+
     virtualHosts."habits.soderlind.dev" = {
       forceSSL = true;
       useACMEHost = "soderlind.dev";

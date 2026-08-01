@@ -22,5 +22,6 @@
     ./actual.nix
     ./kavita.nix
     ./miniflux.nix
+    ./navidrome.nix
   ];
 }
