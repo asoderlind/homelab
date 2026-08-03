@@ -22,7 +22,22 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # The closure is ~10 GiB but the runner's root filesystem only has ~21 GB
+      # free; /mnt is a second ephemeral disk with ~65 GB. Must run before the
+      # installer so it populates the bind mount rather than /.
+      - name: Put the Nix store on the large ephemeral disk
+        run: |
+          sudo mkdir -p /mnt/nix /nix
+          sudo mount --bind /mnt/nix /nix
+          df -h / /nix
+
       - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+        with:
+          # Reclaim build-only inputs mid-build; the result symlink is a GC
+          # root, so the closure itself survives. Matches modules/core/nix.nix.
+          extra-conf: |
+            min-free = 5368709120
+            max-free = 10737418240
 
       - name: Build system closure
         run: |

@@ -25,7 +25,32 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # This job holds two ~10 GiB closures at once (diff-closures needs both
+      # realised), so it needs more headroom than ci.yml: drop the runner's
+      # preinstalled toolchains, then move the store to the bigger disk.
+      - uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
+
+      - name: Put the Nix store on the large ephemeral disk
+        run: |
+          sudo mkdir -p /mnt/nix /nix
+          sudo mount --bind /mnt/nix /nix
+          df -h / /nix
+
       - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+        with:
+          # Reclaim build-only inputs mid-build; result-old and result-new are
+          # GC roots, so both closures survive. Matches modules/core/nix.nix.
+          extra-conf: |
+            min-free = 5368709120
+            max-free = 10737418240
 
       - name: Build current system closure
         run: |
