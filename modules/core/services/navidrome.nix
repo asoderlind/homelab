@@ -13,7 +13,7 @@
       # via tailscale0, is the only way in (see nginx.nix / networking.nix).
       Address = "127.0.0.1";
       Port = 4533;
-      MusicFolder = "/mnt/backup/media/music";
+      MusicFolder = "/mnt/backup/media/torrents/music";
       # No anonymous usage reporting from the homelab.
       EnableInsightsCollector = false;
     };
