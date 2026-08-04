@@ -29,4 +29,9 @@
       };
     };
   };
+
+  # The media share is the only share, and /mnt/backup is nofail: without this
+  # smbd would happily serve - and write into - the bare mountpoint on the root
+  # filesystem whenever the drive is unplugged. No drive, no share.
+  systemd.services.samba-smbd.unitConfig.RequiresMountsFor = [ "/mnt/backup" ];
 }

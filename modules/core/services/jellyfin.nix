@@ -21,6 +21,10 @@
     ];
   };
 
+  # /mnt/backup is nofail: without this Jellyfin would start against an empty
+  # /mnt/backup and a library scan would mark the whole media library missing.
+  systemd.services.jellyfin.unitConfig.RequiresMountsFor = [ "/mnt/backup" ];
+
   # Jellyfin's service user needs /dev/dri access for hw transcoding
   users.users.jellyfin.extraGroups = [
     "video"
