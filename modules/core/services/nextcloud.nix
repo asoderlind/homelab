@@ -38,8 +38,14 @@
         ;
     };
 
+    phpOptions = {
+      "opcache.interned_strings_buffer" = "32";
+      "opcache.memory_consumption" = "256";
+    };
+
     settings = {
       overwriteprotocol = "https";
+      "overwrite.cli.url" = "https://drive.soderlind.dev";
       maintenance_window_start = "3";
       # File log so fail2ban can watch it
       log_type = "file";

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Installs prometheus-node-exporter on the Debian Raspberry Pis.
 # Idempotent - safe to re-run.
-#   usage: ./scripts/setup-pi-exporter.sh [ssh-host ...]   (default: rpi rpi4)
+#   usage: ./scripts/setup-pi-exporter.sh [ssh-host ...]   (default: rpi3 rpi)
 set -euo pipefail
 
+# ssh aliases, not the Prometheus instance labels: `rpi` is the Pi 5 (rpi5).
 hosts=("$@")
 if [ ${#hosts[@]} -eq 0 ]; then
-  hosts=(rpi rpi4)
+  hosts=(rpi3 rpi)
 fi
 
 for host in "${hosts[@]}"; do
