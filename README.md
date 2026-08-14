@@ -181,9 +181,8 @@ nix run nixpkgs#deploy-rs -- .#hyperion
 ```
 
 Both nodes build remotely and auto-roll back if activation fails. `hyperion`
-uses the `Host hyperion` entry in `~/.ssh/config`. Its first deployment asks
-for the existing sudo password interactively; that activation installs the
-shared passwordless-wheel policy used by subsequent deploy-rs runs.
+uses the `Host hyperion` entry in `~/.ssh/config`; the shared security module
+allows the `axel` wheel user to activate deployments without a sudo password.
 
 Note: flake eval only sees files known to git — `git add` new files
 (including `.age` secrets) or they don't exist as far as nix is concerned.

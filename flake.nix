@@ -64,10 +64,6 @@
             "-i"
             "~/.ssh/homelab/hyperion"
           ];
-          # Hyperion currently requires a sudo password. The first deploy uses
-          # a TTY for that prompt; the deployed shared security policy makes
-          # subsequent sudo invocations passwordless for wheel users.
-          interactiveSudo = true;
         };
       };
 
