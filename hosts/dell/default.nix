@@ -3,12 +3,12 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../../modules/core
-    ../../modules/core/filesystems.nix
-    ../../modules/core/hardware.nix
-    ../../modules/core/services
-    ../../modules/core/system.nix
-    ../../modules/core/virtualisation.nix
+    ../../modules/common
+    ./filesystems.nix
+    ./hardware.nix
+    ./services
+    ./system.nix
+    ./virtualisation.nix
   ];
 
   networking.hostName = "nixos-homelab-dell";

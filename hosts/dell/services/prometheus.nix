@@ -20,7 +20,7 @@
       };
     };
     # The Raspberry Pis run Debian and are not managed by this flake; they get
-    # node_exporter via scripts/setup-pi-exporter.sh. Their IPs must be
+    # node_exporter via hosts/dell/scripts/setup-pi-exporter.sh. Their IPs must be
     # DHCP-reserved on the router.
     scrapeConfigs = [
       {

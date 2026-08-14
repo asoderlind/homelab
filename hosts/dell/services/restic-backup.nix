@@ -53,16 +53,16 @@ in
   environment.systemPackages = [
     (pkgs.writeShellApplication {
       name = "nextcloud-restore";
-      text = builtins.readFile ../../../scripts/nextcloud-restore.sh;
+      text = builtins.readFile ../scripts/nextcloud-restore.sh;
     })
   ];
 
   # Repo encryption password, shared by both repos; root-owned (restic runs
   # as root). A copy must also live off-host (password manager) - without it
   # neither repo is readable, which is exactly the disaster-recovery case.
-  age.secrets.restic-password.file = ../../../secrets/restic-password.age;
+  age.secrets.restic-password.file = ../secrets/restic-password.age;
   # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY for the off-site S3 repo.
-  age.secrets.restic-offsite-env.file = ../../../secrets/restic-offsite-env.age;
+  age.secrets.restic-offsite-env.file = ../secrets/restic-offsite-env.age;
 
   # pg_dump of the nextcloud + miniflux DBs -> /var/backup/postgresql/
   # <db>.sql.gz (atomic rename, previous copy kept as .prev). startAt = []

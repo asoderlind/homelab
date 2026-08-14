@@ -2,7 +2,7 @@
 {
   # JWT signing key; random, nothing else depends on it. Rotating it just
   # logs everyone out.
-  age.secrets.kavita-token.file = ../../../secrets/kavita-token.age;
+  age.secrets.kavita-token.file = ../secrets/kavita-token.age;
 
   # Kavita - manga/comic server with a proper web reader (RTL, webtoon
   # mode, per-user progress). Libraries are configured in-app; point them

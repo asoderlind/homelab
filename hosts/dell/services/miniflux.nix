@@ -7,7 +7,7 @@
 {
   # First-run admin credentials (ADMIN_USERNAME / ADMIN_PASSWORD). Only
   # consulted while the user table is empty; change the password in-app.
-  age.secrets.miniflux-admin-creds.file = ../../../secrets/miniflux-admin-creds.age;
+  age.secrets.miniflux-admin-creds.file = ../secrets/miniflux-admin-creds.age;
 
   # Miniflux - RSS reader (adapted from the poseidon repo). All state
   # lives in the local 'miniflux' postgres database, which the module

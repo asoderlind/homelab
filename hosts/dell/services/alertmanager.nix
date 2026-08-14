@@ -10,7 +10,7 @@
   # config, so DynamicUser doesn't need read access to the secret itself.
   # This bot is dedicated to alerting - deliberately separate from any
   # assistant/bridge bot so alert delivery never depends on other services.
-  age.secrets.alertmanager-env.file = ../../../secrets/alertmanager-env.age;
+  age.secrets.alertmanager-env.file = ../secrets/alertmanager-env.age;
 
   # The decrypted secret's path never changes, so a token rotation alone
   # doesn't restart the unit; keying on the encrypted file's content makes

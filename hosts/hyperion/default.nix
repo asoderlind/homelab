@@ -3,7 +3,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../../modules/core
+    ../../modules/common
   ];
 
   networking.hostName = "hyperion";

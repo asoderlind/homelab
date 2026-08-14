@@ -9,9 +9,7 @@
   users.users.axel = {
     isNormalUser = true;
     description = "axel";
-    # Pinned (matches the account already on disk - see filesystems.nix)
-    # so oci-containers can resolve /run/user/1000 for rootless Podman's
-    # RequiresMountsFor at eval time instead of an unresolved UID.
+    # Pinned to match the existing account and shared data ownership on disk.
     uid = 1000;
     extraGroups = [
       "networkmanager"

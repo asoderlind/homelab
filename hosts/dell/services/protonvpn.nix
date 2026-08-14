@@ -14,7 +14,7 @@
 
   # WireGuard private key from the config generated at account.protonvpn.com
   # (Downloads -> WireGuard configuration, P2P server, NAT-PMP enabled).
-  age.secrets.protonvpn-wg-key.file = ../../../secrets/protonvpn-wg-key.age;
+  age.secrets.protonvpn-wg-key.file = ../secrets/protonvpn-wg-key.age;
 
   # Namespace + veth plumbing. The veth pair exists only so nginx on the
   # host can reach the RPC port inside the namespace; it carries no default

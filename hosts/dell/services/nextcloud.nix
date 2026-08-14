@@ -2,7 +2,7 @@
 {
   age.secrets = {
     nextcloud-admin-pass = {
-      file = ../../../secrets/nextcloud-admin-pass.age;
+      file = ../secrets/nextcloud-admin-pass.age;
       owner = "nextcloud";
       group = "nextcloud";
       mode = "0400";
@@ -12,7 +12,7 @@
     #   nextcloud-occ config:app:set serverinfo token --value <token>
     # (persisted in the DB), so rotating it requires re-running that command.
     nextcloud-serverinfo-token = {
-      file = ../../../secrets/nextcloud-serverinfo-token.age;
+      file = ../secrets/nextcloud-serverinfo-token.age;
       owner = "nextcloud-exporter";
       group = "nextcloud-exporter";
       mode = "0400";
@@ -62,7 +62,7 @@
 
   systemd.tmpfiles.rules = [ "d /var/log/nextcloud 0750 nextcloud nextcloud -" ];
 
-  # fail2ban itself is enabled in modules/core/security.nix. All clients
+  # fail2ban itself is enabled in modules/common/security.nix. All clients
   # arrive via tailscale0 (100.64.0.0/10), so a ban locks that tailnet
   # device out for a day; recover with
   #   fail2ban-client set nextcloud unbanip <ip>

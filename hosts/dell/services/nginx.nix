@@ -4,7 +4,7 @@
   # soderlind.dev>. The host is only reachable over Tailscale, so HTTP-01
   # validation can't work; lego uses this token for DNS-01 instead,
   # publishing the challenge TXT record via Cloudflare's API.
-  age.secrets.acme-cloudflare-env.file = ../../../secrets/acme-cloudflare-env.age;
+  age.secrets.acme-cloudflare-env.file = ../secrets/acme-cloudflare-env.age;
 
   security.acme = {
     acceptTerms = true;

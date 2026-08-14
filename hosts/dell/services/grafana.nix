@@ -1,7 +1,7 @@
 { config, ... }:
 {
   age.secrets.grafana-secret-key = {
-    file = ../../../secrets/grafana-secret-key.age;
+    file = ../secrets/grafana-secret-key.age;
     owner = "grafana";
     group = "grafana";
     mode = "0400";

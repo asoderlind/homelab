@@ -10,9 +10,9 @@ One flake manages two x86_64 NixOS hosts:
   be added separately.
 
 Host entry points and generated hardware settings live under `hosts/`.
-`modules/core/default.nix` is the baseline imported by both hosts; the Dell
-additionally imports its storage, services, Podman, and hardware workarounds
-from the remaining modules under `modules/core/`.
+`modules/common/default.nix` is the baseline imported by both hosts. Dell-only
+storage, services, secrets, scripts, Podman configuration, and hardware
+workarounds live under `hosts/dell/`.
 
 Most things are declarative, but a few steps are manual. This is the list.
 
@@ -20,7 +20,7 @@ Most things are declarative, but a few steps are manual. This is the list.
 
 The Dell runs everything (NixOS + all services); the two Raspberry Pis are
 separate Debian machines scraped as extra `node` targets by Prometheus (see
-`modules/core/services/prometheus.nix`).
+`hosts/dell/services/prometheus.nix`).
 
 | Instance | Machine | CPU | RAM | Storage | OS |
 | --- | --- | --- | --- | --- | --- |
@@ -45,7 +45,7 @@ else on the host uses the VPN.
 ### Ingress: tailnet-only
 
 The LAN firewall exposes only SSH (port 22). Everything else rides on
-`tailscale0` being a trusted interface (`modules/core/networking.nix`) —
+`tailscale0` being a trusted interface (`modules/common/networking.nix`) —
 any port a service listens on is reachable from the tailnet without being
 opened in the firewall, and unreachable from anywhere else.
 
@@ -81,7 +81,7 @@ model: bound normally, reachable only over the tailnet.
 
 ### Egress: Proton VPN split tunnel for Transmission
 
-Everything lives in `modules/core/services/protonvpn.nix` (plumbing) and
+Everything lives in `hosts/dell/services/protonvpn.nix` (plumbing) and
 `transmission.nix` (attaching the daemon). The goal: **all** of
 Transmission's traffic goes through Proton VPN, and **only** Transmission's
 — Tailscale, ACME, restic → Hetzner, and Nextcloud keep using the normal
@@ -190,8 +190,8 @@ Note: flake eval only sees files known to git — `git add` new files
 
 ## Secrets (agenix)
 
-Recipients are defined in `secrets/secrets.nix` (server host key + laptop
-key). To create or edit a secret, from `secrets/`:
+Recipients are defined in `hosts/dell/secrets/secrets.nix` (server host key +
+laptop key). To create or edit a secret, from `hosts/dell/secrets/`:
 
 ```sh
 EDITOR=vim agenix -e <name>.age -i ~/.ssh/id_ed25519
@@ -262,7 +262,7 @@ First-time setup after the initial deploy:
   ```
 
 - **Major Nextcloud upgrades** are not automatic: bump `pkgs.nextcloudNN`
-  in `modules/core/services/nextcloud.nix` one major version at a time and
+  in `hosts/dell/services/nextcloud.nix` one major version at a time and
   deploy.
 
 ## Backups (restic → /mnt/backup)
@@ -302,7 +302,7 @@ backed up.
 All repos use the same `restic-password` secret; the off-site ones also
 need `restic-offsite-env` (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`).
 The endpoint and bucket are set at the top of
-`modules/core/services/restic-backup.nix`.
+`hosts/dell/services/restic-backup.nix`.
 
 The repo password is the `restic-password` agenix secret — **also keep a
 copy in the password manager**; without it the repo is unreadable.
@@ -330,7 +330,7 @@ requires typing `restore` to confirm, then stops php-fpm/cron, restores
 files with `--delete` (true point-in-time — files created after the
 snapshot are removed), reloads the DB from the snapshot's dump, clears the
 Redis cache, restarts services, and re-scans files. Source:
-`scripts/nextcloud-restore.sh`. For a non-destructive look inside a
+`hosts/dell/scripts/nextcloud-restore.sh`. For a non-destructive look inside a
 snapshot instead: `sudo restic-nextcloud restore latest --target /tmp/restore`.
 
 ## Actual Budget (actual.soderlind.dev)
@@ -354,7 +354,7 @@ media tree's default permissions provide). The only repo secret is
 
 RSS reader, adapted from the poseidon repo. The admin account is created
 on first start from the `miniflux-admin-creds` agenix secret
-(`agenix -d secrets/miniflux-admin-creds.age` on the laptop shows it);
+(`agenix -d hosts/dell/secrets/miniflux-admin-creds.age` on the laptop shows it);
 change the password in-app afterwards — the file is only read again if
 the user table is ever empty. State is the local `miniflux` postgres
 database, backed up via the nextcloud restic jobs (see above).
@@ -373,5 +373,5 @@ provide). No secrets in the repo.
 ## Monitoring
 
 Prometheus (`:9001`) + Alertmanager → Telegram. Alert rules live in
-`modules/core/services/alertmanager.nix`; exporters and scrape jobs live in
+`hosts/dell/services/alertmanager.nix`; exporters and scrape jobs live in
 each service's own module. Grafana at `grafana.soderlind.dev`.

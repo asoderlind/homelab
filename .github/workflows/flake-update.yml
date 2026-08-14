@@ -47,7 +47,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
         with:
           # Reclaim build-only inputs mid-build; result-old and result-new are
-          # GC roots, so both closures survive. Matches modules/core/nix.nix.
+          # GC roots, so both closures survive. Matches modules/common/nix.nix.
           extra-conf: |
             min-free = 5368709120
             max-free = 10737418240
