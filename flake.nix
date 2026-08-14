@@ -1,5 +1,5 @@
 {
-  description = "NixOS configuration";
+  description = "NixOS homelab configurations";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
@@ -18,35 +18,62 @@
       self,
       nixpkgs,
       deploy-rs,
-      home-manager,
       agenix,
       ...
-    }@inputs:
-    {
-      nixosConfigurations = {
-        nixos = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            ./configuration.nix
-            ./modules/core
-            agenix.nixosModules.default
-          ];
+    }:
+    let
+      system = "x86_64-linux";
+      mkHost =
+        modules:
+        nixpkgs.lib.nixosSystem {
+          inherit system modules;
         };
-      };
-      deploy.nodes.nixos = {
-        hostname = "nixos-homelab-dell.tail193da7.ts.net";
+      mkDeployNode = hostname: configuration: {
+        inherit hostname;
         sshUser = "axel";
-        sshOpts = [
-          "-i"
-          "~/.ssh/homelab/dell"
-        ];
         remoteBuild = true;
         confirmTimeout = 300;
         activationTimeout = 600;
         profiles.system = {
           user = "root";
-          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.nixos;
+          path = deploy-rs.lib.${system}.activate.nixos configuration;
         };
       };
+    in
+    {
+      nixosConfigurations = {
+        dell = mkHost [
+          ./hosts/dell
+          agenix.nixosModules.default
+        ];
+        hyperion = mkHost [
+          ./hosts/hyperion
+        ];
+      };
+
+      deploy.nodes = {
+        dell = (mkDeployNode "nixos-homelab-dell.tail193da7.ts.net" self.nixosConfigurations.dell) // {
+          sshOpts = [
+            "-i"
+            "~/.ssh/homelab/dell"
+          ];
+        };
+
+        hyperion = (mkDeployNode "hyperion" self.nixosConfigurations.hyperion) // {
+          sshOpts = [
+            "-i"
+            "~/.ssh/homelab/hyperion"
+          ];
+          # Hyperion currently requires a sudo password. The first deploy uses
+          # a TTY for that prompt; the deployed shared security policy makes
+          # subsequent sudo invocations passwordless for wheel users.
+          interactiveSudo = true;
+        };
+      };
+
+      # The deployment targets are x86_64-linux. Publishing deploy checks for
+      # Darwin makes deploy-rs try to build Linux activation derivations on the
+      # invoking Mac before remoteBuild gets a chance to use the target host.
+      checks.${system} = deploy-rs.lib.${system}.deployChecks self.deploy;
     };
 }

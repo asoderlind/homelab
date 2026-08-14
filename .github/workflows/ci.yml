@@ -1,4 +1,4 @@
-# Builds the full system closure on pushes to master and on pull requests.
+# Builds both full system closures on pushes to master and pull requests.
 # Note: does not fire on PRs opened by flake-update.yml (GITHUB_TOKEN PRs
 # don't trigger pull_request workflows) — that workflow validates inline.
 name: ci
@@ -39,7 +39,9 @@ jobs:
             min-free = 5368709120
             max-free = 10737418240
 
-      - name: Build system closure
+      - name: Build system closures
         run: |
-          nix build .#nixosConfigurations.nixos.config.system.build.toplevel \
-            --out-link result --print-build-logs
+          for host in dell hyperion; do
+            nix build ".#nixosConfigurations.${host}.config.system.build.toplevel" \
+              --out-link "result-${host}" --print-build-logs
+          done

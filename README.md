@@ -1,8 +1,18 @@
-# nixos-homelab-dell
+# NixOS homelab
 
-NixOS configuration for the Dell homelab. Services are tailnet-only: nginx
-terminates TLS with a wildcard `*.soderlind.dev` cert (ACME DNS-01 via
-Cloudflare) and nothing but SSH is exposed outside `tailscale0`.
+One flake manages two x86_64 NixOS hosts:
+
+- `dell` runs the existing homelab services. They are tailnet-only: nginx
+  terminates TLS with a wildcard `*.soderlind.dev` cert (ACME DNS-01 via
+  Cloudflare), and nothing but SSH is exposed outside `tailscale0`.
+- `hyperion` is the HP EliteDesk intended for a future agent lab. It currently
+  has only the shared server baseline; Forgejo, chat, and agent services will
+  be added separately.
+
+Host entry points and generated hardware settings live under `hosts/`.
+`modules/core/default.nix` is the baseline imported by both hosts; the Dell
+additionally imports its storage, services, Podman, and hardware workarounds
+from the remaining modules under `modules/core/`.
 
 Most things are declarative, but a few steps are manual. This is the list.
 
@@ -15,6 +25,7 @@ separate Debian machines scraped as extra `node` targets by Prometheus (see
 | Instance | Machine | CPU | RAM | Storage | OS |
 | --- | --- | --- | --- | --- | --- |
 | `dell` | Dell OptiPlex 3040 | Intel Core i5-6500T — 4C/4T, 2.5 GHz (Skylake) | 8 GB | 500 GB internal SATA HDD (Toshiba MQ01ACF050) | NixOS 26.05 |
+| `hyperion` | HP EliteDesk | Intel Core i7-7700 — 4C/8T, 3.6 GHz (Kaby Lake) | 16 GB | 256 GB Samsung NVMe | NixOS 26.05 |
 | `rpi5` | Raspberry Pi 5 Model B (Rev 1.1) | Broadcom BCM2712 — quad Cortex-A76, 2.4 GHz | 16 GB | 32 GB microSD | Debian 12 (bookworm) |
 | `rpi3` | Raspberry Pi 3 Model B (Rev 1.2) | Broadcom BCM2837 — quad Cortex-A53, 1.2 GHz | 1 GB | 16 GB microSD | Debian 13 (trixie) |
 
@@ -152,19 +163,27 @@ sudo systemctl start wireguard-protonvpn                   # transmission return
 
 ## Deploying
 
-Always done manually, from the repo root:
+Deployments are manual and host-specific. Validate both configurations and
+the deploy-rs schema from the repo root:
 
 ```sh
-nix run nixpkgs#deploy-rs -- .#nixos    # or `deploy .#nixos`
+nix flake check --no-build
+nix eval --raw .#nixosConfigurations.dell.config.system.build.toplevel.drvPath
+nix eval --raw .#nixosConfigurations.hyperion.config.system.build.toplevel.drvPath
 ```
 
-deploy-rs builds remotely on the host and auto-rolls-back if activation
-fails (e.g. a unit fails to start during the switch). Validate before
-deploying:
+Then deploy only the intended host:
 
 ```sh
-nix eval --raw .#nixosConfigurations.nixos.config.system.build.toplevel.drvPath
+nix run nixpkgs#deploy-rs -- .#dell
+nix run nixpkgs#deploy-rs -- .#hyperion
+# Equivalent if deploy-rs is installed: deploy .#dell / deploy .#hyperion
 ```
+
+Both nodes build remotely and auto-roll back if activation fails. `hyperion`
+uses the `Host hyperion` entry in `~/.ssh/config`. Its first deployment asks
+for the existing sudo password interactively; that activation installs the
+shared passwordless-wheel policy used by subsequent deploy-rs runs.
 
 Note: flake eval only sees files known to git — `git add` new files
 (including `.age` secrets) or they don't exist as far as nix is concerned.
