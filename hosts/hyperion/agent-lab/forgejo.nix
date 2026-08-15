@@ -52,10 +52,10 @@ in
     };
     settings = {
       server = {
-        DOMAIN = "hyperion";
-        HTTP_ADDR = "0.0.0.0";
+        DOMAIN = "forgejo.soderlind.dev";
+        HTTP_ADDR = "127.0.0.1";
         HTTP_PORT = 3001;
-        ROOT_URL = "http://hyperion:3001/";
+        ROOT_URL = "https://forgejo.soderlind.dev/";
         DISABLE_SSH = true;
       };
       service = {

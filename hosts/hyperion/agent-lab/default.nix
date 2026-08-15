@@ -3,6 +3,7 @@
     ./agents.nix
     ./buzz.nix
     ./forgejo.nix
+    ./nginx.nix
   ];
 
   # All application ports remain closed on the LAN firewall. Tailscale's

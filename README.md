@@ -191,8 +191,28 @@ Note: flake eval only sees files known to git — `git add` new files
 Hyperion follows Buzz's production single-node Compose layout rather than a
 development Compose file or an XMPP substitute. The pinned bundle runs the
 Buzz relay with PostgreSQL, Redis, MinIO, and its Git data volume. Forgejo is at
-`http://hyperion:3001`; Buzz is at `http://hyperion:3000`. Neither port is open
-on the LAN firewall, so both are reachable only through Tailscale.
+`https://forgejo.soderlind.dev`; Buzz is at
+`https://buzz.soderlind.dev` (`wss://buzz.soderlind.dev` for relay clients).
+nginx is the only ingress path: both applications bind to loopback, and nginx's
+HTTP/HTTPS listeners are reachable only through the trusted Tailscale
+interface.
+
+The two explicit, DNS-only Cloudflare A records must point to Hyperion's
+Tailscale IPv4 address. They intentionally override the `*.soderlind.dev`
+wildcard that points at Dell. Do not enable Cloudflare proxying for private
+Tailscale addresses. Hyperion obtains a certificate for both names using
+Cloudflare DNS-01, because a public CA cannot reach a tailnet address for an
+HTTP-01 challenge.
+
+When moving an already-bootstrapped lab from `hyperion:3000` to the HTTPS
+hostname, deploy first and rerun `sudo buzz-bootstrap` without a public-key
+argument. It preserves the existing relay and agent private keys, rewrites only
+the non-secret endpoint settings, and registers those identities in the new
+`buzz.soderlind.dev` community. Select `wss://buzz.soderlind.dev` as the relay
+in Buzz Desktop, then recreate the desired channels and add the agents. The old
+`hyperion:3000` community remains untouched in PostgreSQL and is not exposed or
+deleted automatically. Forgejo keeps its existing database and repositories;
+only its canonical URL changes.
 
 The three workers are independent Hermes `v2026.8.13` gateways running as
 `agent-coordinator`, `agent-developer`, and `agent-ops`. Hermes talks to Buzz
@@ -246,7 +266,8 @@ Run these steps in order:
    sudo forgejo-runner-bootstrap
    ```
 
-   Log in at `http://hyperion:3001`, create the private `agent-wiki` repository,
+   Log in at `https://forgejo.soderlind.dev`, create the private `agent-wiki`
+   repository,
    and create one least-privilege account and scoped token for each role. Grant
    only the repository and issue permissions that role needs; do not grant
    administrator, Actions administration, or package permissions. Add
@@ -312,7 +333,7 @@ Run these steps in order:
 
    ```sh
    git -c credential.helper=osxkeychain clone \
-     http://hyperion:3001/axel/agent-wiki.git ~/Documents/agent-wiki
+     https://forgejo.soderlind.dev/axel/agent-wiki.git ~/Documents/agent-wiki
    git -C ~/Documents/agent-wiki config pull.rebase true
    open -a Obsidian ~/Documents/agent-wiki
    ```
@@ -364,8 +385,10 @@ must be backed up.
 
 ## Secrets (agenix)
 
-Recipients are defined in `hosts/dell/secrets/secrets.nix` (server host key +
-laptop key). To create or edit a secret, from `hosts/dell/secrets/`:
+Recipients are defined in each host's `secrets/secrets.nix` (server host key +
+laptop key). Hyperion and Dell have separate encrypted copies of the
+Cloudflare ACME environment file so each host decrypts only its own file. To
+create or edit a secret, enter the relevant host's secrets directory:
 
 ```sh
 EDITOR=vim agenix -e <name>.age -i ~/.ssh/id_ed25519

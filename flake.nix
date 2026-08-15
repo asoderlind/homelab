@@ -71,6 +71,7 @@
         ];
         hyperion = mkHost [
           ./hosts/hyperion
+          agenix.nixosModules.default
         ];
       };
 

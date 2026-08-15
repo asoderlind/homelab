@@ -159,7 +159,7 @@ let
         platforms.buzz = {
           enabled = true;
           extra = {
-            relay_url = "ws://hyperion:3000";
+            relay_url = "wss://buzz.soderlind.dev";
             cli_path = "${buzzCli}/bin/buzz";
             poll_interval = 4;
             require_mention = true;
@@ -210,11 +210,13 @@ let
     after = [
       "buzz-compose.service"
       "forgejo.service"
+      "nginx.service"
       "network-online.target"
     ];
     wants = [
       "buzz-compose.service"
       "forgejo.service"
+      "nginx.service"
       "network-online.target"
     ];
     wantedBy = [ "multi-user.target" ];
@@ -226,7 +228,7 @@ let
       HOME = roleHome role;
       HERMES_HOME = hermesHome role;
       HERMES_MANAGED = "true";
-      BUZZ_RELAY_URL = "ws://hyperion:3000";
+      BUZZ_RELAY_URL = "wss://buzz.soderlind.dev";
       BUZZ_CLI_PATH = "${buzzCli}/bin/buzz";
       BUZZ_TRANSPORT = "auto";
       FORGEJO_URL = "http://127.0.0.1:3001";

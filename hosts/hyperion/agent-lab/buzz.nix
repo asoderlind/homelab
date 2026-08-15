@@ -55,11 +55,11 @@ let
         install -d -m 0700 ${composeDir}
         {
           echo "BUZZ_IMAGE=${buzzImage}"
-          echo "BUZZ_DOMAIN=hyperion"
-          echo "RELAY_URL=ws://hyperion:3000"
-          echo "BUZZ_MEDIA_BASE_URL=http://hyperion:3000/media"
-          echo "BUZZ_MEDIA_SERVER_DOMAIN=hyperion"
-          echo "BUZZ_CORS_ORIGINS=http://hyperion:3000"
+          echo "BUZZ_DOMAIN=buzz.soderlind.dev"
+          echo "RELAY_URL=wss://buzz.soderlind.dev"
+          echo "BUZZ_MEDIA_BASE_URL=https://buzz.soderlind.dev/media"
+          echo "BUZZ_MEDIA_SERVER_DOMAIN=buzz.soderlind.dev"
+          echo "BUZZ_CORS_ORIGINS=https://buzz.soderlind.dev"
           echo "BUZZ_REQUIRE_AUTH_TOKEN=true"
           echo "BUZZ_REQUIRE_RELAY_MEMBERSHIP=true"
           echo "BUZZ_ALLOW_NIP_OA_AUTH=true"
@@ -77,20 +77,33 @@ let
           echo "BUZZ_S3_SECRET_KEY=$s3_secret_key"
           echo "BUZZ_S3_BUCKET=buzz-media"
           echo "BUZZ_S3_ADDRESSING_STYLE=path"
-          echo "BUZZ_HTTP_PORT=3000"
+          # Docker's published port is only an nginx upstream. This prevents
+          # tailnet clients from bypassing TLS on port 3000.
+          echo "BUZZ_HTTP_PORT=127.0.0.1:3000"
         } > ${envFile}
         chmod 0600 ${envFile}
       else
         owner_pubkey="$(awk -F= '$1 == "RELAY_OWNER_PUBKEY" { print $2 }' ${envFile})"
       fi
 
-      # Keep generated secrets stable while reconciling the declarative image
-      # pin. This also repairs .env files left by an unavailable image tag.
-      if grep -q '^BUZZ_IMAGE=' ${envFile}; then
-        sed -i 's|^BUZZ_IMAGE=.*$|BUZZ_IMAGE=${buzzImage}|' ${envFile}
-      else
-        printf '%s\n' 'BUZZ_IMAGE=${buzzImage}' >> ${envFile}
-      fi
+      # Keep generated secrets stable while reconciling declarative, non-secret
+      # deployment settings in an existing bootstrap file.
+      reconcile_env() {
+        key="$1"
+        value="$2"
+        if grep -q "^$key=" ${envFile}; then
+          sed -i "s|^$key=.*$|$key=$value|" ${envFile}
+        else
+          printf '%s=%s\n' "$key" "$value" >> ${envFile}
+        fi
+      }
+      reconcile_env BUZZ_IMAGE '${buzzImage}'
+      reconcile_env BUZZ_DOMAIN 'buzz.soderlind.dev'
+      reconcile_env RELAY_URL 'wss://buzz.soderlind.dev'
+      reconcile_env BUZZ_MEDIA_BASE_URL 'https://buzz.soderlind.dev/media'
+      reconcile_env BUZZ_MEDIA_SERVER_DOMAIN 'buzz.soderlind.dev'
+      reconcile_env BUZZ_CORS_ORIGINS 'https://buzz.soderlind.dev'
+      reconcile_env BUZZ_HTTP_PORT '127.0.0.1:3000'
 
       ${dockerCompose} up -d --wait --remove-orphans
 
@@ -136,7 +149,7 @@ let
           ops) profile_name="Ops" ;;
         esac
         BUZZ_PRIVATE_KEY="$(cat "${secretsDir}/$role.key")" \
-          BUZZ_RELAY_URL=ws://hyperion:3000 \
+          BUZZ_RELAY_URL=wss://buzz.soderlind.dev \
           ${buzzTools}/bin/buzz users set-profile \
             --name "$profile_name" \
             --about "Hyperion agent-lab $role agent" >/dev/null || \
@@ -148,7 +161,7 @@ let
       systemctl try-restart agent-lab-ops.service || true
 
       echo
-      echo "Buzz is running at http://hyperion:3000 on the tailnet."
+      echo "Buzz is running at https://buzz.soderlind.dev on the tailnet."
       echo "Agent identities and private Hermes allowlists are registered."
       echo "Next: add each role's FORGEJO_USERNAME/TOKEN to its .env file,"
       echo "run agent-lab-auth for each role, then run agent-lab-wiki-bootstrap."
