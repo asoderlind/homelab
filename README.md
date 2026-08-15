@@ -241,8 +241,8 @@ Run these steps in order:
    sudo -u forgejo forgejo admin user create \
      --work-path /var/lib/forgejo \
      --config /var/lib/forgejo/custom/conf/app.ini \
-     --username axel --email YOUR_EMAIL --admin \
-     --password 'TEMPORARY_PASSWORD'
+     --username asoderlind --email axel@soderlind.dev --admin \
+     --password 'forgejo'
    sudo forgejo-runner-bootstrap
    ```
 

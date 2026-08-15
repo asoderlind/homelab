@@ -10,6 +10,10 @@ let
   composeFile = "${composeDir}/compose.yml";
   envFile = "${composeDir}/.env";
   secretsDir = "/var/lib/agent-lab/secrets";
+  # The pinned Buzz source commit only changes the desktop release metadata, so
+  # it did not publish a relay image. Its parent contains identical relay and
+  # Compose sources and has a published multi-architecture image.
+  buzzImage = "ghcr.io/block/buzz:sha-4749bc7@sha256:1cf416a2f7794498bbbcffb88568f9869fa98c9b345f7a343f05287bf03d285d";
   buzzTools = pkgs.callPackage ./package.nix { inherit buzzSrc; };
   dockerCompose = "${pkgs.docker}/bin/docker compose --project-directory ${composeDir} --env-file ${envFile} -f ${composeFile}";
 
@@ -20,6 +24,7 @@ let
       docker
       gawk
       gnugrep
+      gnused
       openssl
       systemd
     ];
@@ -49,7 +54,7 @@ let
 
         install -d -m 0700 ${composeDir}
         {
-          echo "BUZZ_IMAGE=ghcr.io/block/buzz:sha-248b9d1"
+          echo "BUZZ_IMAGE=${buzzImage}"
           echo "BUZZ_DOMAIN=hyperion"
           echo "RELAY_URL=ws://hyperion:3000"
           echo "BUZZ_MEDIA_BASE_URL=http://hyperion:3000/media"
@@ -77,6 +82,14 @@ let
         chmod 0600 ${envFile}
       else
         owner_pubkey="$(awk -F= '$1 == "RELAY_OWNER_PUBKEY" { print $2 }' ${envFile})"
+      fi
+
+      # Keep generated secrets stable while reconciling the declarative image
+      # pin. This also repairs .env files left by an unavailable image tag.
+      if grep -q '^BUZZ_IMAGE=' ${envFile}; then
+        sed -i 's|^BUZZ_IMAGE=.*$|BUZZ_IMAGE=${buzzImage}|' ${envFile}
+      else
+        printf '%s\n' 'BUZZ_IMAGE=${buzzImage}' >> ${envFile}
       fi
 
       ${dockerCompose} up -d --wait --remove-orphans
