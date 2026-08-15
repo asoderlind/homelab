@@ -17,23 +17,8 @@ Most things are declarative, but a few steps are manual. This is the list.
 
 ## Hardware
 
-The Dell runs everything (NixOS + all services); the two Raspberry Pis are
-separate Debian machines scraped as extra `node` targets by Prometheus (see
-`hosts/dell/services/prometheus.nix`).
-
-| Instance | Machine | CPU | RAM | Storage | OS |
-| --- | --- | --- | --- | --- | --- |
-| `dell` | Dell OptiPlex 3040 | Intel Core i5-6500T — 4C/4T, 2.5 GHz (Skylake) | 8 GB | 500 GB internal SATA HDD (Toshiba MQ01ACF050) | NixOS 26.05 |
-| `hyperion` | HP EliteDesk | Intel Core i7-7700 — 4C/8T, 3.6 GHz (Kaby Lake) | 16 GB | 256 GB Samsung NVMe | NixOS 26.05 |
-| `rpi5` | Raspberry Pi 5 Model B (Rev 1.1) | Broadcom BCM2712 — quad Cortex-A76, 2.4 GHz | 16 GB | 32 GB microSD | Debian 12 (bookworm) |
-| `rpi3` | Raspberry Pi 3 Model B (Rev 1.2) | Broadcom BCM2837 — quad Cortex-A53, 1.2 GHz | 1 GB | 16 GB microSD | Debian 13 (trixie) |
-
-The `dell`/`rpi5`/`rpi3` names are the Prometheus `instance` labels.
-
-**Backup HDD**: a Western Digital 2 TB USB drive (WD20EARX-00PASB0) mounted at
-`/mnt/backup` on the Dell, holding the local restic repo (see
-[Backups](#backups-restic--mntbackup)). Mounted `nofail`; the backup jobs check
-the mountpoint and fail loudly if it's absent.
+The machine inventory, network hardware, storage, monitoring labels, and 12U
+rack layout are documented in [docs/hardware.md](docs/hardware.md).
 
 ## Networking
 
@@ -190,7 +175,10 @@ Note: flake eval only sees files known to git — `git add` new files
 
 Hyperion follows Buzz's production single-node Compose layout rather than a
 development Compose file or an XMPP substitute. The pinned bundle runs the
-Buzz relay with PostgreSQL, Redis, MinIO, and its Git data volume. Forgejo is at
+Buzz relay with PostgreSQL, Redis, MinIO, its Git data volume, and a stateless
+NIP-AB device-pairing sidecar. nginx exposes only the sidecar's exact `/pair`
+WebSocket path, and the main relay advertises it to Buzz clients as
+`wss://buzz.soderlind.dev/pair`. Forgejo is at
 `https://forgejo.soderlind.dev`; Buzz is at
 `https://buzz.soderlind.dev` (`wss://buzz.soderlind.dev` for relay clients).
 nginx is the only ingress path: both applications bind to loopback, and nginx's
