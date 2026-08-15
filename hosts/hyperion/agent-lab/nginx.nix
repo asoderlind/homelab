@@ -43,6 +43,17 @@
     virtualHosts."buzz.soderlind.dev" = {
       forceSSL = true;
       useACMEHost = "buzz.soderlind.dev";
+      # NIP-AB device pairing uses a deliberately stateless sidecar rather
+      # than the authenticated community relay. Expose only its protocol path.
+      locations."= /pair" = {
+        proxyPass = "http://127.0.0.1:5000";
+        proxyWebsockets = true;
+        extraConfig = ''
+          proxy_read_timeout 3m;
+          proxy_send_timeout 3m;
+          proxy_buffering off;
+        '';
+      };
       locations."/" = {
         proxyPass = "http://127.0.0.1:3000";
         proxyWebsockets = true;

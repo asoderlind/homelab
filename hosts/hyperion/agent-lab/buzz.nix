@@ -8,6 +8,7 @@
 let
   composeDir = "/var/lib/buzz/compose";
   composeFile = "${composeDir}/compose.yml";
+  composeOverrideFile = "${composeDir}/compose.override.yml";
   envFile = "${composeDir}/.env";
   secretsDir = "/var/lib/agent-lab/secrets";
   # The pinned Buzz source commit only changes the desktop release metadata, so
@@ -15,7 +16,38 @@ let
   # Compose sources and has a published multi-architecture image.
   buzzImage = "ghcr.io/block/buzz:sha-4749bc7@sha256:1cf416a2f7794498bbbcffb88568f9869fa98c9b345f7a343f05287bf03d285d";
   buzzTools = pkgs.callPackage ./package.nix { inherit buzzSrc; };
-  dockerCompose = "${pkgs.docker}/bin/docker compose --project-directory ${composeDir} --env-file ${envFile} -f ${composeFile}";
+  composeOverride = pkgs.writeText "buzz-compose.override.yml" ''
+    services:
+      relay:
+        environment:
+          BUZZ_PAIRING_RELAY_URL: wss://buzz.soderlind.dev/pair
+
+      pairing:
+        image: ${buzzImage}
+        command: ["/usr/local/bin/buzz-pair-relay"]
+        environment:
+          BUZZ_PAIR_RELAY_BIND_ADDR: 0.0.0.0:5000
+        ports:
+          - "127.0.0.1:5000:5000"
+        user: "65532:65532"
+        read_only: true
+        cap_drop: ["ALL"]
+        security_opt:
+          - no-new-privileges:true
+        cpus: 0.25
+        mem_limit: 128m
+        pids_limit: 64
+        healthcheck:
+          test: ["CMD-SHELL", "bash -ec 'exec 3<>/dev/tcp/127.0.0.1/5000'"]
+          interval: 10s
+          timeout: 3s
+          retries: 6
+          start_period: 5s
+        restart: unless-stopped
+        networks:
+          - buzz-net
+  '';
+  dockerCompose = "${pkgs.docker}/bin/docker compose --project-directory ${composeDir} --env-file ${envFile} -f ${composeFile} -f ${composeOverrideFile}";
 
   buzzBootstrap = pkgs.writeShellApplication {
     name = "buzz-bootstrap";
@@ -178,6 +210,7 @@ in
     "d /var/lib/buzz 0700 root root - -"
     "d ${composeDir} 0700 root root - -"
     "L+ ${composeFile} - - - - ${buzzSrc}/deploy/compose/compose.yml"
+    "L+ ${composeOverrideFile} - - - - ${composeOverride}"
     "d /var/lib/agent-lab 0751 root root - -"
     "d ${secretsDir} 0700 root root - -"
   ];
