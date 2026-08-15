@@ -394,8 +394,20 @@ let
 
       git_as_role() {
         local role="$1"
+        local home="/var/lib/agent-lab/agents/$role"
         shift
-        runuser -u "agent-$role" -- git "$@"
+        # sudo/runuser otherwise retains the caller's working directory. Axel's
+        # home is mode 0700, so Git fails while probing /home/axel/.git before
+        # it ever contacts Forgejo. Run from the role's traversable home and do
+        # not inherit a human user's global Git configuration.
+        (
+          cd "$home"
+          runuser -u "agent-$role" -- env \
+            HOME="$home" \
+            XDG_CONFIG_HOME="$home/.config" \
+            GIT_CONFIG_GLOBAL=/dev/null \
+            git "$@"
+        )
       }
 
       load_role_credentials coordinator
