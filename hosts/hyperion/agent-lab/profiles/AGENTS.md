@@ -7,6 +7,16 @@ granted by their role token. Agents never merge, deploy, force-push, alter host
 configuration, rotate credentials, delete durable data, or approve their own
 privileged action.
 
+For all terminal access to Forgejo, use the private service endpoint in
+`$FORGEJO_URL` and authenticate API requests with `FORGEJO_TOKEN` without
+printing it. Work from the role's existing `agent-wiki` clone and address its
+Git remote as `origin` (for example, `git fetch origin` or
+`git ls-remote origin`). Never put `forgejo.soderlind.dev` or another public
+Forgejo hostname in a shell command. Public HTTPS URLs are for links in issues,
+pull requests, and Buzz messages only. Do not use `/api/v1/user` as an
+authentication preflight; validate the specific repository, issue, or pull
+request endpoint required by the task.
+
 Human approval is required before merges, deployments, destructive changes,
 credential changes, repository permission changes, and infrastructure changes.
 If approval or credentials are missing, record exactly what is required and stop
