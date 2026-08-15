@@ -11,6 +11,21 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Pin Buzz's production Compose bundle and CLI together.
+    buzz = {
+      url = "github:block/buzz/248b9d1b7666aacbcb1485b76e81de30a271ba0e";
+      flake = false;
+    };
+    hermes-agent = {
+      url = "github:NousResearch/hermes-agent/v2026.8.13";
+      # The Mnemosyne plugin must use the exact same Python interpreter as
+      # Hermes for Nix's Python-module discovery and ABI checks.
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    mnemosyne = {
+      url = "github:mnemosyne-oss/mnemosyne/v3.15.1";
+      flake = false;
+    };
   };
 
   outputs =
@@ -19,6 +34,9 @@
       nixpkgs,
       deploy-rs,
       agenix,
+      buzz,
+      hermes-agent,
+      mnemosyne,
       ...
     }:
     let
@@ -27,6 +45,11 @@
         modules:
         nixpkgs.lib.nixosSystem {
           inherit system modules;
+          specialArgs = {
+            buzzSrc = buzz;
+            hermesAgent = hermes-agent;
+            mnemosyneSrc = mnemosyne;
+          };
         };
       mkDeployNode = hostname: configuration: {
         inherit hostname;

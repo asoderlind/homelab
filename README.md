@@ -5,9 +5,8 @@ One flake manages two x86_64 NixOS hosts:
 - `dell` runs the existing homelab services. They are tailnet-only: nginx
   terminates TLS with a wildcard `*.soderlind.dev` cert (ACME DNS-01 via
   Cloudflare), and nothing but SSH is exposed outside `tailscale0`.
-- `hyperion` is the HP EliteDesk intended for a future agent lab. It currently
-  has only the shared server baseline; Forgejo, chat, and agent services will
-  be added separately.
+- `hyperion` is the HP EliteDesk agent lab: a pinned Buzz production Compose
+  stack, Forgejo, an isolated Actions runner, and three owner-gated ACP agents.
 
 Host entry points and generated hardware settings live under `hosts/`.
 `modules/common/default.nix` is the baseline imported by both hosts. Dell-only
@@ -186,6 +185,182 @@ allows the `axel` wheel user to activate deployments without a sudo password.
 
 Note: flake eval only sees files known to git — `git add` new files
 (including `.age` secrets) or they don't exist as far as nix is concerned.
+
+## Hyperion agent lab
+
+Hyperion follows Buzz's production single-node Compose layout rather than a
+development Compose file or an XMPP substitute. The pinned bundle runs the
+Buzz relay with PostgreSQL, Redis, MinIO, and its Git data volume. Forgejo is at
+`http://hyperion:3001`; Buzz is at `http://hyperion:3000`. Neither port is open
+on the LAN firewall, so both are reachable only through Tailscale.
+
+The three workers are independent Hermes `v2026.8.13` gateways running as
+`agent-coordinator`, `agent-developer`, and `agent-ops`. Hermes talks to Buzz
+natively and authenticates to `gpt-5.6-terra` through the `openai-codex`
+ChatGPT/Codex OAuth provider. There is no API-key or OpenRouter fallback. Each
+role has a separate Unix user, Hermes home, OAuth store, Buzz identity,
+Mnemosyne `v3.15.1` SQLite database, workspace, mutable skills, sessions, and
+Forgejo token. All three share one ChatGPT account quota but no credential file.
+
+Each gateway has one top-level active session, at most two flat Terra
+subagents, manual command approval, immutable deny rules for privilege,
+deployment, destructive deletion, forced pushes, containers, and host
+management, plus `MemoryHigh=2G`, `MemoryMax=3G`, `CPUQuota=150%`, and 512 tasks.
+The users are not in `wheel` or `docker`, cannot traverse another role's home,
+and have only their own home writable. Hyperion also has 25% zram swap for
+short-lived memory bursts.
+
+### First deployment and bootstrap
+
+Run these steps in order:
+
+1. Deploy the configuration, then join the host to the tailnet if necessary:
+
+   ```sh
+   nix run nixpkgs#deploy-rs -- .#hyperion
+   ssh hyperion sudo tailscale up
+   ```
+
+2. In Buzz Desktop, create or select your human identity and copy its 64-byte
+   hex public key. Bootstrap the closed relay and three agent identities:
+
+   ```sh
+   ssh hyperion sudo buzz-bootstrap YOUR_64_CHARACTER_HEX_PUBKEY
+   ```
+
+   The command creates the stable Compose secrets under
+   `/var/lib/buzz/compose/.env`, starts the upstream stack, registers the agent
+   identities, and publishes their profiles. Re-running it is safe and retains
+   the keys. It also writes the private human/agent allowlists used by Hermes.
+   Existing `*-model.env` files are ignored and deliberately not deleted.
+
+3. Create the initial Forgejo administrator from the host:
+
+   ```sh
+   ssh hyperion
+   sudo -u forgejo forgejo admin user create \
+     --work-path /var/lib/forgejo \
+     --config /var/lib/forgejo/custom/conf/app.ini \
+     --username axel --email YOUR_EMAIL --admin \
+     --password 'TEMPORARY_PASSWORD'
+   sudo forgejo-runner-bootstrap
+   ```
+
+   Log in at `http://hyperion:3001`, create the private `agent-wiki` repository,
+   and create one least-privilege account and scoped token for each role. Grant
+   only the repository and issue permissions that role needs; do not grant
+   administrator, Actions administration, or package permissions. Add
+   branch protection to `main`, require human review, disable automatic merge,
+   and do not let any agent account bypass protection. Add
+   each account and token to its existing root-owned environment file:
+
+   ```sh
+   sudoedit /var/lib/agent-lab/secrets/coordinator.env
+   sudoedit /var/lib/agent-lab/secrets/developer.env
+   sudoedit /var/lib/agent-lab/secrets/ops.env
+   ```
+
+   Preserve the generated Buzz entries and add:
+
+   ```ini
+   FORGEJO_USERNAME=agent-coordinator
+   FORGEJO_TOKEN=replace-with-this-role-token
+   ```
+
+   Use the matching account in each file. `buzz-bootstrap` preserves these
+   Forgejo lines when rerun. The runner remains container-only with concurrency,
+   CPU, memory, and PID limits; it exposes no host label, Docker socket, auto
+   merge, or deployment path.
+
+4. Authenticate each Hermes home with the ChatGPT account. The helper stops
+   only that role, starts Hermes's device-code login as the role user, verifies
+   its private `auth.json`, and safely restarts the service when Buzz is ready:
+
+   ```sh
+   ssh -t hyperion sudo agent-lab-auth coordinator
+   ssh -t hyperion sudo agent-lab-auth developer
+   ssh -t hyperion sudo agent-lab-auth ops
+   ```
+
+   Complete the URL/code flow in a browser for every role. This is subscription
+   authentication, not an OpenAI Platform API key. Eligibility and quota remain
+   provider-controlled, so validate each role with a real first inference.
+
+5. Initialize the Forgejo-backed Obsidian wiki and the three private clones:
+
+   ```sh
+   ssh hyperion sudo agent-lab-wiki-bootstrap axel
+   ```
+
+   If `/var/lib/agent-lab/wiki.git` contains commits and `agent-wiki` is empty,
+   the helper pushes its branches and tags first. The old bare repository and a
+   migration mirror are retained. If Forgejo already has content, it refuses to
+   overwrite it. Credentials are supplied through an immutable askpass helper;
+   they are never written into Git remotes or command lines. Existing clones
+   must be clean and pull with rebase; any conflict stops for human resolution.
+
+6. Start and inspect all gateways:
+
+   ```sh
+   sudo systemctl start agent-lab-{coordinator,developer,ops}.service
+   sudo systemctl status agent-lab-{coordinator,developer,ops}.service
+   ```
+
+7. Clone the same repository on the Mac and open it as an Obsidian vault. Let
+   Git prompt for the Forgejo username and a separate Mac-scoped token so the
+   token does not become part of the remote URL:
+
+   ```sh
+   git -c credential.helper=osxkeychain clone \
+     http://hyperion:3001/axel/agent-wiki.git ~/Documents/agent-wiki
+   git -C ~/Documents/agent-wiki config pull.rebase true
+   open -a Obsidian ~/Documents/agent-wiki
+   ```
+
+### Smoke checks
+
+After activation and OAuth login, make one real subscription-backed inference
+per role, then test one Buzz DM and one mention-gated channel request per role.
+Also verify a single issue-bound agent handoff does not loop, store and recall a
+Mnemosyne memory across a gateway restart, spawn two flat Terra subagents (and
+confirm a nested spawn is rejected), and push a wiki commit that the Mac pulls.
+Finally confirm each user cannot read the other two homes and cannot use sudo,
+Docker, merge, deploy, force-push, or run host-management commands.
+
+Useful checks:
+
+```sh
+sudo systemctl status buzz-compose forgejo
+sudo docker compose --project-directory /var/lib/buzz/compose \
+  --env-file /var/lib/buzz/compose/.env \
+  -f /var/lib/buzz/compose/compose.yml ps
+sudo systemctl status agent-lab-{coordinator,developer,ops}
+sudo journalctl -u agent-lab-developer -f
+```
+
+### Portable state and backup boundary
+
+This change does not configure off-host backups. Before treating the lab as
+durable, back up all of the following:
+
+- Hermes profiles, sessions, mutable skills, and workspaces:
+  `/var/lib/agent-lab/agents/{coordinator,developer,ops}/`
+- Role OAuth stores: each role's `.hermes/auth.json` (treat as a credential)
+- Private Mnemosyne banks: each role's
+  `.hermes/mnemosyne/data/mnemosyne.db` plus SQLite WAL/SHM files
+- Buzz identities and Forgejo tokens: `/var/lib/agent-lab/secrets/`
+- Buzz Compose secrets: `/var/lib/buzz/compose/.env`
+- Buzz named volumes: `buzz-postgres-data`, `buzz-redis-data`,
+  `buzz-minio-data`, and `buzz-git-data`
+- Forgejo state and four weeks of daily dumps under `/var/lib/forgejo/`
+- The canonical `agent-wiki` Forgejo repository, every role clone, and the Mac
+  Obsidian clone; retain `/var/lib/agent-lab/wiki.git` and
+  `/var/lib/agent-lab/wiki-migration.git` when present
+
+The Nix-managed `SOUL.md`, shared `AGENTS.md`, and `nix-managed-*` skills are
+reproducible from this repository. Any additional skills placed beside the
+managed skill link in a role's `.hermes/skills/` directory are mutable state and
+must be backed up.
 
 ## Secrets (agenix)
 
