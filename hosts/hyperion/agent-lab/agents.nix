@@ -21,6 +21,22 @@ let
 
   buzzCli = pkgs.callPackage ./package.nix { inherit buzzSrc; };
   mnemosyneHermes = pkgs.callPackage ./mnemosyne-package.nix { inherit mnemosyneSrc; };
+  # Hermes v2026.8.13 imports this top-level module but accidentally omits it
+  # from tool.setuptools.py-modules, so its sealed Nix wheel cannot find it.
+  # Expose the exact file from the pinned Hermes source until upstream's Nix
+  # package includes it itself.
+  hermesRegistrationLifecycle = pkgs.python312Packages.toPythonModule (
+    pkgs.stdenvNoCC.mkDerivation {
+      pname = "hermes-registration-lifecycle";
+      version = "2026.8.13";
+      dontUnpack = true;
+      installPhase = ''
+        install -Dm0444 \
+          ${hermesAgent.outPath}/registration_lifecycle.py \
+          $out/${pkgs.python312.sitePackages}/registration_lifecycle.py
+      '';
+    }
+  );
   # Hermes's sealed environment already contains common dependencies such as
   # PyYAML, NumPy, ONNX Runtime, Hugging Face Hub, and tokenizers. Expose only
   # the Mnemosyne/FastEmbed modules it lacks so Hermes's collision check keeps
@@ -56,7 +72,7 @@ let
     ]
   );
   hermesPackage = hermesAgent.packages.${system}.default.override {
-    extraPythonPackages = mnemosynePythonModules;
+    extraPythonPackages = [ hermesRegistrationLifecycle ] ++ mnemosynePythonModules;
   };
   forgejoAskPass = pkgs.writeShellScript "agent-lab-forgejo-askpass" ''
     case "''${1:-}" in
@@ -143,7 +159,7 @@ let
         platforms.buzz = {
           enabled = true;
           extra = {
-            relay_url = "ws://127.0.0.1:3000";
+            relay_url = "ws://hyperion:3000";
             cli_path = "${buzzCli}/bin/buzz";
             poll_interval = 4;
             require_mention = true;
@@ -210,7 +226,7 @@ let
       HOME = roleHome role;
       HERMES_HOME = hermesHome role;
       HERMES_MANAGED = "true";
-      BUZZ_RELAY_URL = "ws://127.0.0.1:3000";
+      BUZZ_RELAY_URL = "ws://hyperion:3000";
       BUZZ_CLI_PATH = "${buzzCli}/bin/buzz";
       BUZZ_TRANSPORT = "auto";
       FORGEJO_URL = "http://127.0.0.1:3001";

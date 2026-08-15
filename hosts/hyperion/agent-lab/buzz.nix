@@ -136,7 +136,7 @@ let
           ops) profile_name="Ops" ;;
         esac
         BUZZ_PRIVATE_KEY="$(cat "${secretsDir}/$role.key")" \
-          BUZZ_RELAY_URL=ws://127.0.0.1:3000 \
+          BUZZ_RELAY_URL=ws://hyperion:3000 \
           ${buzzTools}/bin/buzz users set-profile \
             --name "$profile_name" \
             --about "Hyperion agent-lab $role agent" >/dev/null || \
