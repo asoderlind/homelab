@@ -572,3 +572,8 @@ provide). No secrets in the repo.
 Prometheus (`:9001`) + Alertmanager → Telegram. Alert rules live in
 `hosts/dell/services/alertmanager.nix`; exporters and scrape jobs live in
 each service's own module. Grafana at `grafana.soderlind.dev`.
+
+The `node` scrape job includes Dell, both Raspberry Pis, and Hyperion. Hyperion
+serves node_exporter on port 9100 through Tailscale only; Dell scrapes its stable
+MagicDNS name. In Grafana's provisioned **Node Exporter Full** dashboard, select
+the `node` job, the `hyperion` nodename, and the `hyperion` instance.

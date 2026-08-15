@@ -3,6 +3,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./monitoring.nix
     ./agent-lab
     ../../modules/common
   ];

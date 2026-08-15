@@ -38,6 +38,13 @@
             targets = [ "192.168.1.98:9100" ];
             labels.instance = "rpi3";
           }
+          {
+            # Hyperion exposes node_exporter only over its trusted Tailscale
+            # interface; MagicDNS keeps the scrape target independent of its
+            # current tailnet IP.
+            targets = [ "hyperion.tail193da7.ts.net:9100" ];
+            labels.instance = "hyperion";
+          }
         ];
       }
     ];
