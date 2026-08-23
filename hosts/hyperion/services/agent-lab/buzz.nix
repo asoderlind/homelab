@@ -24,7 +24,7 @@ let
 
       pairing:
         image: ${buzzImage}
-        command: ["/usr/local/bin/buzz-pair-relay"]
+        entrypoint: ["/usr/local/bin/buzz-pair-relay"]
         environment:
           BUZZ_PAIR_RELAY_BIND_ADDR: 0.0.0.0:5000
         ports:

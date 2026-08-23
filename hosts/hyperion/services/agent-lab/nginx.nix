@@ -10,7 +10,7 @@
 
   # Hyperion is reachable only over Tailscale, so HTTP-01 cannot validate its
   # public names. Issue one SAN certificate through Cloudflare DNS-01 instead.
-  age.secrets.acme-cloudflare-env.file = ../secrets/acme-cloudflare-env.age;
+  age.secrets.acme-cloudflare-env.file = ../../secrets/acme-cloudflare-env.age;
 
   security.acme = {
     acceptTerms = true;
