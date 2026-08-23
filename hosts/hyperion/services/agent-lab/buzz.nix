@@ -91,7 +91,7 @@ let
           echo "RELAY_URL=wss://buzz.soderlind.dev"
           echo "BUZZ_MEDIA_BASE_URL=https://buzz.soderlind.dev/media"
           echo "BUZZ_MEDIA_SERVER_DOMAIN=buzz.soderlind.dev"
-          echo "BUZZ_CORS_ORIGINS=https://buzz.soderlind.dev"
+          echo "BUZZ_CORS_ORIGINS=https://buzz.soderlind.dev,tauri://localhost,http://tauri.localhost,https://tauri.localhost"
           echo "BUZZ_REQUIRE_AUTH_TOKEN=true"
           echo "BUZZ_REQUIRE_RELAY_MEMBERSHIP=true"
           echo "BUZZ_ALLOW_NIP_OA_AUTH=true"
@@ -134,7 +134,7 @@ let
       reconcile_env RELAY_URL 'wss://buzz.soderlind.dev'
       reconcile_env BUZZ_MEDIA_BASE_URL 'https://buzz.soderlind.dev/media'
       reconcile_env BUZZ_MEDIA_SERVER_DOMAIN 'buzz.soderlind.dev'
-      reconcile_env BUZZ_CORS_ORIGINS 'https://buzz.soderlind.dev'
+      reconcile_env BUZZ_CORS_ORIGINS 'https://buzz.soderlind.dev,tauri://localhost,http://tauri.localhost,https://tauri.localhost'
       reconcile_env BUZZ_HTTP_PORT '127.0.0.1:3000'
 
       ${dockerCompose} up -d --wait --remove-orphans
