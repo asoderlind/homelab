@@ -61,6 +61,11 @@ nginx is Hyperion's only ingress path. Both applications and the Buzz pairing
 relay bind to loopback, while ports 80 and 443 are reachable only through the
 trusted `tailscale0` interface.
 
+Linear Agent Session ingress terminates at the separately deployed Cloudflare
+Worker under `integrations/linear-agent-relay`. The Worker stores validated
+events in D1 and Hyperion polls it outbound over HTTPS. This does not add a
+Hyperion nginx vhost, Cloudflare Tunnel, or firewall opening.
+
 | Public endpoint | Upstream | Notes |
 | --- | --- | --- |
 | `https://buzz.soderlind.dev` | `127.0.0.1:3000` | Buzz HTTP API, media, and community WebSocket relay |

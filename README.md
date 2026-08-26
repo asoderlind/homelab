@@ -91,6 +91,16 @@ The users are not in `wheel` or `docker`, cannot traverse another role's home,
 and have only their own home writable. Hyperion also has 25% zram swap for
 short-lived memory bursts.
 
+Linear is the authoritative task surface. Each role also exposes an
+authenticated Hermes API on a distinct loopback-only port and runs a small
+outbound polling bridge. A Cloudflare Worker receives signed Linear Agent
+Session webhooks and queues them in D1, so no Hyperion port is public. Humans
+remain issue assignees while the Coordinator, Developer, or Ops app is the
+delegate. Forgejo remains the source and pull-request host; Buzz remains a
+private fallback communication path. See
+[`integrations/linear-agent-relay/README.md`](integrations/linear-agent-relay/README.md)
+for the Worker, OAuth application, secret, and smoke-test bootstrap.
+
 ### First deployment and bootstrap
 
 Run these steps in order:
@@ -114,6 +124,8 @@ Run these steps in order:
    identities, and publishes their profiles. Re-running it is safe and retains
    the keys. It also writes the private human/agent allowlists used by Hermes.
    Existing `*-model.env` files are ignored and deliberately not deleted.
+   Existing Forgejo, Linear relay, and Hermes API entries in each role's
+   environment file are preserved.
 
 3. Create the initial Forgejo administrator from the host:
 
@@ -142,7 +154,8 @@ Run these steps in order:
    sudoedit /var/lib/agent-lab/secrets/ops.env
    ```
 
-   Preserve the generated Buzz entries and add:
+   Preserve the generated Buzz entries and add the Forgejo values below. The
+   Linear relay setup adds its own values to these same files later:
 
    ```ini
    FORGEJO_USERNAME=agent-coordinator
@@ -202,12 +215,15 @@ Run these steps in order:
 ### Smoke checks
 
 After activation and OAuth login, make one real subscription-backed inference
-per role, then test one Buzz DM and one mention-gated channel request per role.
-Also verify a single issue-bound agent handoff does not loop, store and recall a
-Mnemosyne memory across a gateway restart, spawn two flat Terra subagents (and
-confirm a nested spawn is rejected), and push a wiki commit that the Mac pulls.
-Finally confirm each user cannot read the other two homes and cannot use sudo,
-Docker, merge, deploy, force-push, or run host-management commands.
+per role, then test one Linear delegation and follow-up plus one Buzz DM and one
+mention-gated channel request per role. Verify a linked Linear child-issue
+handoff does not loop, a one-time approval works while permanent approval is
+unavailable, a Forgejo pull request is linked back to Linear, and queued work
+survives a bridge restart. Also store and recall a Mnemosyne memory across a
+gateway restart, spawn two flat Terra subagents (and confirm a nested spawn is
+rejected), and push a wiki commit that the Mac pulls. Finally confirm each user
+cannot read the other two homes and cannot use sudo, Docker, merge, deploy,
+force-push, or run host-management commands.
 
 Useful checks:
 
@@ -230,7 +246,10 @@ durable, back up all of the following:
 - Role OAuth stores: each role's `.hermes/auth.json` (treat as a credential)
 - Private Mnemosyne banks: each role's
   `.hermes/mnemosyne/data/mnemosyne.db` plus SQLite WAL/SHM files
-- Buzz identities and Forgejo tokens: `/var/lib/agent-lab/secrets/`
+- Buzz identities, Forgejo tokens, Linear relay tokens, and Hermes loopback API
+  keys: `/var/lib/agent-lab/secrets/` (treat all as credentials)
+- Cloudflare D1 relay state and Worker secrets; these live outside Hyperion and
+  are not covered by the host's filesystem backup
 - Buzz Compose secrets: `/var/lib/buzz/compose/.env`
 - Buzz named volumes: `buzz-postgres-data`, `buzz-redis-data`,
   `buzz-minio-data`, and `buzz-git-data`

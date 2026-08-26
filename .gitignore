@@ -2,3 +2,6 @@ result
 result-*
 temp.txt
 **/.DS_Store
+integrations/linear-agent-relay/node_modules/
+integrations/linear-agent-relay/.wrangler/
+hosts/hyperion/services/agent-lab/__pycache__/

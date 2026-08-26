@@ -18,6 +18,11 @@ let
   hermesHome = role: "${roleHome role}/.hermes";
   workspace = role: "${roleHome role}/workspace";
   secretsDir = "/var/lib/agent-lab/secrets";
+  apiServerPorts = {
+    coordinator = 8650;
+    developer = 8651;
+    ops = 8652;
+  };
 
   buzzCli = pkgs.callPackage ./package.nix { inherit buzzSrc; };
   mnemosyneHermes = pkgs.callPackage ./mnemosyne-package.nix { inherit mnemosyneSrc; };
@@ -80,6 +85,13 @@ let
       *) printf '%s\n' "''${FORGEJO_TOKEN:?FORGEJO_TOKEN is not set}" ;;
     esac
   '';
+  linearBridge = pkgs.writeShellApplication {
+    name = "linear-agent-bridge";
+    runtimeInputs = [ pkgs.python3 ];
+    text = ''
+      exec python3 ${./linear_bridge.py}
+    '';
+  };
 
   denialRules = [
     "*sudo*"
@@ -156,14 +168,24 @@ let
       user_profile_enabled = false;
       gateway = {
         max_concurrent_sessions = 1;
-        platforms.buzz = {
-          enabled = true;
-          extra = {
-            relay_url = "wss://buzz.soderlind.dev";
-            cli_path = "${buzzCli}/bin/buzz";
-            poll_interval = 4;
-            require_mention = true;
-            allow_all_users = false;
+        api_server.max_concurrent_runs = 1;
+        platforms = {
+          buzz = {
+            enabled = true;
+            extra = {
+              relay_url = "wss://buzz.soderlind.dev";
+              cli_path = "${buzzCli}/bin/buzz";
+              poll_interval = 4;
+              require_mention = true;
+              allow_all_users = false;
+            };
+          };
+          api_server = {
+            enabled = true;
+            extra = {
+              host = "127.0.0.1";
+              port = apiServerPorts.${role};
+            };
           };
         };
       };
@@ -231,6 +253,9 @@ let
       BUZZ_RELAY_URL = "wss://buzz.soderlind.dev";
       BUZZ_CLI_PATH = "${buzzCli}/bin/buzz";
       BUZZ_TRANSPORT = "auto";
+      API_SERVER_HOST = "127.0.0.1";
+      API_SERVER_PORT = toString apiServerPorts.${role};
+      LINEAR_AGENT_ROLE = role;
       FORGEJO_URL = "http://127.0.0.1:3001";
       GIT_ASKPASS = forgejoAskPass;
       GIT_TERMINAL_PROMPT = "0";
@@ -298,6 +323,70 @@ let
       MemoryMax = "3G";
       CPUQuota = "150%";
       TasksMax = 512;
+      UMask = "0077";
+    };
+  };
+
+  mkLinearBridgeService = role: {
+    description = "Linear Agent Session bridge for the ${role} agent";
+    after = [
+      "agent-lab-${role}.service"
+      "network-online.target"
+    ];
+    requires = [ "agent-lab-${role}.service" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+    unitConfig.ConditionPathExists = [ "${secretsDir}/${role}.env" ];
+    environment = {
+      HOME = roleHome role;
+      HERMES_HOME = hermesHome role;
+      LINEAR_AGENT_ROLE = role;
+      API_SERVER_HOST = "127.0.0.1";
+      API_SERVER_PORT = toString apiServerPorts.${role};
+      PYTHONDONTWRITEBYTECODE = "1";
+    };
+    serviceConfig = {
+      User = "agent-${role}";
+      Group = "agent-${role}";
+      EnvironmentFile = "${secretsDir}/${role}.env";
+      ExecCondition = pkgs.writeShellScript "agent-lab-${role}-linear-check" ''
+        set -eu
+        test -n "''${LINEAR_RELAY_URL:-}"
+        test -n "''${LINEAR_RELAY_TOKEN:-}"
+        test -n "''${API_SERVER_KEY:-}"
+      '';
+      ExecStart = "${linearBridge}/bin/linear-agent-bridge";
+      WorkingDirectory = workspace role;
+      Restart = "on-failure";
+      RestartSec = 10;
+      NoNewPrivileges = true;
+      PrivateDevices = true;
+      PrivateTmp = true;
+      ProtectClock = true;
+      ProtectControlGroups = true;
+      ProtectHome = true;
+      ProtectHostname = true;
+      ProtectKernelLogs = true;
+      ProtectKernelModules = true;
+      ProtectKernelTunables = true;
+      ProtectProc = "invisible";
+      ProcSubset = "pid";
+      ProtectSystem = "strict";
+      ReadWritePaths = [ (roleHome role) ];
+      RestrictAddressFamilies = [
+        "AF_INET"
+        "AF_INET6"
+        "AF_UNIX"
+      ];
+      RestrictNamespaces = true;
+      RestrictRealtime = true;
+      RestrictSUIDSGID = true;
+      LockPersonality = true;
+      CapabilityBoundingSet = "";
+      MemoryHigh = "256M";
+      MemoryMax = "512M";
+      CPUQuota = "25%";
+      TasksMax = 64;
       UMask = "0077";
     };
   };
@@ -465,6 +554,7 @@ in
   environment.systemPackages = [
     agentLabAuth
     hermesPackage
+    linearBridge
     mnemosyneHermes
     wikiBootstrap
   ];
@@ -476,7 +566,11 @@ in
   ++ map (role: "d ${hermesHome role} 0700 agent-${role} agent-${role} - -") roles
   ++ map (role: "d ${workspace role} 0700 agent-${role} agent-${role} - -") roles;
 
-  systemd.services = lib.genAttrs (map (role: "agent-lab-${role}") roles) (
-    serviceName: mkAgentService (lib.removePrefix "agent-lab-" serviceName)
-  );
+  systemd.services =
+    lib.genAttrs (map (role: "agent-lab-${role}") roles) (
+      serviceName: mkAgentService (lib.removePrefix "agent-lab-" serviceName)
+    )
+    // lib.genAttrs (map (role: "agent-lab-linear-${role}") roles) (
+      serviceName: mkLinearBridgeService (lib.removePrefix "agent-lab-linear-" serviceName)
+    );
 }

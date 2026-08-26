@@ -161,7 +161,7 @@ let
         preserved_env="$(mktemp "${secretsDir}/.$role.env.XXXXXX")"
         next_env="$(mktemp "${secretsDir}/.$role.env.XXXXXX")"
         if [ -f "$identity_env" ]; then
-          grep -E '^(FORGEJO_USERNAME|FORGEJO_TOKEN|BUZZ_CHANNELS|BUZZ_HOME_CHANNEL)=' \
+          grep -E '^(FORGEJO_USERNAME|FORGEJO_TOKEN|BUZZ_CHANNELS|BUZZ_HOME_CHANNEL|LINEAR_RELAY_URL|LINEAR_RELAY_TOKEN|API_SERVER_KEY)=' \
             "$identity_env" > "$preserved_env" || true
         fi
         {

@@ -1,19 +1,20 @@
 ---
-name: forgejo-intake
-description: Turn a Buzz request into a bounded Forgejo issue and route it to one lab role.
+name: linear-intake
+description: Refine an authoritative Linear issue and route bounded child issues to one lab role.
 ---
 
-# Forgejo intake
+# Linear intake
 
-Follow the Forgejo command-routing policy in the workspace `AGENTS.md`. Use
-`$FORGEJO_URL` plus the role token for API operations. Never use a public
-Forgejo hostname in a terminal command or call `/api/v1/user` as an
-authentication preflight; check the target repository or issue endpoint
-directly. Public HTTPS URLs belong only in the issue and Buzz response.
+Follow the Linear authority and Forgejo command-routing policy in the workspace
+`AGENTS.md`. The current Linear Agent Session supplies the authoritative issue
+context. Use `$FORGEJO_URL` plus the role token only when repository inspection
+is required; never use a public Forgejo hostname in a terminal command or call
+`/api/v1/user` as an authentication preflight.
 
-Before handing work off, locate or create one Forgejo issue. Record the request,
-scope, acceptance criteria, verification expectations, risks, and human owner.
-Link the issue in the Buzz thread. Assign exactly one next role and state the
-artifact it should return. Do not create an implementation branch or merge a
-pull request. If the request needs deployment, credentials, deletion, or host
-changes, mark it blocked on human approval.
+Before handing work off, confirm the Linear issue records the request, scope,
+acceptance criteria, verification expectations, risks, and human assignee. Use
+`linear-agent-bridge handoff --target ROLE --parent ISSUE --title TITLE
+--description DESCRIPTION` to create one linked child issue and delegate it to
+exactly one next role. State the artifact it should return. Do not create an
+implementation branch or merge a pull request. If the request needs deployment,
+credentials, deletion, or host changes, mark it blocked on human approval.
