@@ -31,12 +31,8 @@
             labels.instance = "dell";
           }
           {
-            targets = [ "192.168.1.212:9100" ];
+            targets = [ "192.168.1.211:9100" ];
             labels.instance = "rpi5";
-          }
-          {
-            targets = [ "192.168.1.98:9100" ];
-            labels.instance = "rpi3";
           }
           {
             # Hyperion exposes node_exporter only over its trusted Tailscale
