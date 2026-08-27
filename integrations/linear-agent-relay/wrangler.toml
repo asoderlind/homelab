@@ -1,16 +1,18 @@
 name = "hyperion-linear-agent-relay"
 main = "src/index.ts"
 compatibility_date = "2026-08-26"
+workers_dev = true
+preview_urls = false
 
 [vars]
 # Change this to the deployed Worker URL before installing the Linear apps.
-PUBLIC_BASE_URL = "https://hyperion-linear-agent-relay.example.workers.dev"
+PUBLIC_BASE_URL = "https://hyperion-linear-agent-relay.axel-c6d.workers.dev"
 LINEAR_OWNER_ID = "replace-with-linear-user-id"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "linear-agent-relay"
-database_id = "replace-with-d1-database-id"
+database_id = "a69273e7-6360-4ea5-9795-1da7efd03173"
 migrations_dir = "migrations"
 
 [observability.logs]

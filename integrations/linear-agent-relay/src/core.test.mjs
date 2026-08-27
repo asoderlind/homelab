@@ -9,7 +9,9 @@ import {
   verifyLinearWebhook,
 } from "./core.mjs";
 
-globalThis.crypto = webcrypto;
+if (!globalThis.crypto) {
+  Object.defineProperty(globalThis, "crypto", { value: webcrypto });
+}
 
 test("validates Linear signatures and rejects stale requests", async () => {
   const body = new TextEncoder().encode('{"action":"created"}').buffer;

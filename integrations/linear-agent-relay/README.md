@@ -11,6 +11,8 @@ changes.
 
 ## Provision Cloudflare
 
+Use Node.js 22 or newer for the current Wrangler toolchain.
+
 From this directory, authenticate Wrangler and create the database:
 
 ```sh

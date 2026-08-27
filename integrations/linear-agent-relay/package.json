@@ -2,6 +2,9 @@
   "name": "hyperion-linear-agent-relay",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "node --test src/*.test.mjs",
     "dev": "wrangler dev",
@@ -10,7 +13,7 @@
     "db:migrate:remote": "wrangler d1 execute linear-agent-relay --remote --file=migrations/0001_initial.sql"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260826.0",
+    "@cloudflare/workers-types": "^5.20260827.1",
     "wrangler": "^4.32.0"
   }
 }
