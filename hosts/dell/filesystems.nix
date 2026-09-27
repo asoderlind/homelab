@@ -9,6 +9,38 @@
   # In-kernel exfat driver + exfatprogs for fsck
   boot.supportedFilesystems.exfat = true;
 
+  boot.supportedFilesystems.cifs = true;
+  environment.systemPackages = [ pkgs.cifs-utils ];
+
+  age.secrets.ugreen-media = {
+    file = ./secrets/ugreen-media.age;
+    mode = "0400";
+  };
+
+  # Mount alongside the HDD for migration; connect on first access without
+  # blocking boot when the NAS is unavailable. Match the HDD's ownership.
+  fileSystems."/mnt/media" = {
+    device = "//192.168.1.224/media";
+    fsType = "cifs";
+    options = [
+      "credentials=${config.age.secrets.ugreen-media.path}"
+      "vers=3.1.1"
+      "_netdev"
+      "nofail"
+      "x-systemd.automount"
+      "x-systemd.mount-timeout=30s"
+      "uid=1000" # axel
+      "gid=100" # users
+      "forceuid"
+      "forcegid"
+      "file_mode=0644"
+      "dir_mode=0755"
+      "nosuid"
+      "nodev"
+      "noexec"
+    ];
+  };
+
   # External 1.8T USB drive (label "Backup"). Deliberately not using
   # x-systemd.automount: an automount unit appears in /proc/mounts as fstype
   # autofs, which node_exporter's filesystem collector excludes by default, so
