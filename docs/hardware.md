@@ -25,6 +25,13 @@ installed in the top 1U position. This is connected by cable to a UniFi dream ro
 
 ## Storage
 
+A diskless
+[UGREEN NASync DXP2800](https://nas-eu.ugreen.com/products/ugreen-nasync-dxp2800-nas-storage)
+provides two SATA drive bays and two M.2 NVMe slots. It has an Intel N100
+quad-core processor, 8 GB DDR5 RAM, one 2.5 GbE port, and 4K HDMI output. Two
+4 TB WD Red Plus 3.5-inch NAS hard drives (5400 RPM, SATA 6 Gb/s, CMR, 256 MB
+cache) are on order for its SATA bays.
+
 A Western Digital 2 TB USB drive (WD20EARX-00PASB0) is mounted at
 `/mnt/backup` on the Dell and holds the local restic repository. It is mounted
 with `nofail`; the backup jobs verify the mountpoint and fail loudly when it is

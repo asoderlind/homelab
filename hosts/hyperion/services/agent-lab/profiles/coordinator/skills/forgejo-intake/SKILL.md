@@ -12,7 +12,7 @@ is required; never use a public Forgejo hostname in a terminal command or call
 `/api/v1/user` as an authentication preflight.
 
 Before handing work off, confirm the Linear issue records the request, scope,
-acceptance criteria, verification expectations, risks, and human assignee. Use
+acceptance criteria, verification expectations, risks, and human owner. Use
 `linear-agent-bridge handoff --target ROLE --parent ISSUE --title TITLE
 --description DESCRIPTION` to create one linked child issue and delegate it to
 exactly one next role. State the artifact it should return. Do not create an

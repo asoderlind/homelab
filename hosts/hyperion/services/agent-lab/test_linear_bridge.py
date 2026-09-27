@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 
 
 MODULE_PATH = Path(__file__).with_name("linear_bridge.py")
@@ -25,18 +26,50 @@ class LinearBridgeTests(unittest.TestCase):
             "follow up",
         )
 
-    def test_requires_human_assignee(self):
+    def test_requires_human_owner(self):
         self.assertTrue(
-            linear_bridge.has_human_assignee(
+            linear_bridge.has_human_owner(
                 {"agentSession": {"issue": {"assignee": {"id": "human"}}}}
             )
         )
+        self.assertTrue(
+            linear_bridge.has_human_owner(
+                {
+                    "appUserId": "agent",
+                    "agentSession": {"creatorId": "human", "appUserId": "agent"},
+                }
+            )
+        )
         self.assertFalse(
-            linear_bridge.has_human_assignee(
+            linear_bridge.has_human_owner(
                 {"agentSession": {"issue": {"assignee": {"id": "app", "isApp": True}}}}
             )
         )
-        self.assertFalse(linear_bridge.has_human_assignee({"promptContext": "<issue/>"}))
+        self.assertFalse(
+            linear_bridge.has_human_owner(
+                {"appUserId": "agent", "agentSession": {"creatorId": "agent"}}
+            )
+        )
+        self.assertFalse(linear_bridge.has_human_owner({"promptContext": "<issue/>"}))
+        self.assertEqual(
+            linear_bridge.human_owner(
+                {"agentSession": {"creatorId": "human-id", "creator": {"name": "Axel"}}}
+            ),
+            "Axel",
+        )
+
+    def test_handoff_config_does_not_require_hermes_api_key(self):
+        with patch.dict(
+            linear_bridge.os.environ,
+            {
+                "LINEAR_AGENT_ROLE": "coordinator",
+                "LINEAR_RELAY_URL": "https://relay.example",
+                "LINEAR_RELAY_TOKEN": "relay-token",
+            },
+            clear=True,
+        ):
+            config = linear_bridge.Config.from_env(require_hermes=False)
+        self.assertEqual(config.hermes_key, "")
 
     def test_session_ids_are_stable_and_role_isolated(self):
         first = linear_bridge.stable_hermes_session("developer", "linear-session")

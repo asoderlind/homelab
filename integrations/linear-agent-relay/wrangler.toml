@@ -7,7 +7,7 @@ preview_urls = false
 [vars]
 # Change this to the deployed Worker URL before installing the Linear apps.
 PUBLIC_BASE_URL = "https://hyperion-linear-agent-relay.axel-c6d.workers.dev"
-LINEAR_OWNER_ID = "replace-with-linear-user-id"
+LINEAR_OWNER_ID = "9a68566c-613f-4b90-a011-3d4992031415"
 
 [[d1_databases]]
 binding = "DB"

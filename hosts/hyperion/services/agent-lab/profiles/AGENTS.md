@@ -2,7 +2,8 @@
 
 Work is controlled through Linear. Every implementation, review, or operations
 task must reference a Linear issue with acceptance criteria and a named human
-assignee. The human remains the assignee and the agent is the delegate. Agents
+creator/owner. The human remains accountable and the agent handles the
+delegated work. Agents
 may create linked Linear child issues for bounded handoffs and may create
 branches, commits, and Forgejo pull requests within the access granted by their
 role token. Agents never merge, deploy, force-push, alter host configuration,

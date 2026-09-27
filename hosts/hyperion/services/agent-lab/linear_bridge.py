@@ -82,19 +82,40 @@ def actor_id(payload: dict[str, Any]) -> str:
             ("data", "agentActivity", "user", "id"),
             ("actor", "id"),
             ("data", "actor", "id"),
+            ("agentSession", "creatorId"),
+            ("data", "agentSession", "creatorId"),
+            ("agentSession", "creator", "id"),
+            ("data", "agentSession", "creator", "id"),
         )
         or ""
     )
 
 
-def has_human_assignee(payload: dict[str, Any]) -> bool:
+def has_human_owner(payload: dict[str, Any]) -> bool:
     session = session_payload(payload)
+    creator = session.get("creator") if isinstance(session.get("creator"), dict) else {}
+    creator_id = str(session.get("creatorId") or creator.get("id") or "")
+    app_user_id = str(session.get("appUserId") or payload.get("appUserId") or "")
+    if creator_id:
+        return creator_id != app_user_id and not bool(creator.get("isApp") or creator.get("isBot"))
     issue = session.get("issue") if isinstance(session.get("issue"), dict) else {}
     assignee = issue.get("assignee") if isinstance(issue, dict) else None
     if isinstance(assignee, dict) and assignee.get("id"):
         return not bool(assignee.get("isApp") or assignee.get("isBot"))
     context = prompt_text(payload)
     return "<assignee" in context and (" id=" in context or " name=" in context)
+
+
+def human_owner(payload: dict[str, Any]) -> str:
+    session = session_payload(payload)
+    creator = session.get("creator") if isinstance(session.get("creator"), dict) else {}
+    return str(
+        creator.get("name")
+        or creator.get("displayName")
+        or session.get("creatorId")
+        or creator.get("id")
+        or ""
+    )
 
 
 def stable_hermes_session(role: str, linear_session_id: str) -> str:
@@ -137,17 +158,20 @@ class Config:
     approval_timeout_seconds: int = 900
 
     @classmethod
-    def from_env(cls) -> "Config":
+    def from_env(cls, *, require_hermes: bool = True) -> "Config":
         role = os.environ.get("LINEAR_AGENT_ROLE", "")
         if role not in ROLES:
             raise BridgeError("LINEAR_AGENT_ROLE must be coordinator, developer, or ops")
         port = int(os.environ.get("API_SERVER_PORT", "0"))
+        hermes_key = os.environ.get("API_SERVER_KEY", "")
+        if require_hermes and not hermes_key:
+            raise BridgeError("API_SERVER_KEY is required for the polling bridge")
         return cls(
             role=role,
             relay_url=os.environ["LINEAR_RELAY_URL"].rstrip("/"),
             relay_token=os.environ["LINEAR_RELAY_TOKEN"],
             hermes_url=f"http://127.0.0.1:{port}",
-            hermes_key=os.environ["API_SERVER_KEY"],
+            hermes_key=hermes_key,
             poll_seconds=float(os.environ.get("LINEAR_POLL_SECONDS", "2")),
             approval_timeout_seconds=int(os.environ.get("LINEAR_APPROVAL_TIMEOUT_SECONDS", "900")),
         )
@@ -245,11 +269,12 @@ class Bridge:
         )
         return urllib.request.urlopen(request, timeout=3600)
 
-    def start_run(self, linear_session_id: str, text: str) -> str:
+    def start_run(self, linear_session_id: str, text: str, owner: str = "") -> str:
         hermes_session_id = stable_hermes_session(self.config.role, linear_session_id)
         instructions = (
             f"This is Linear Agent Session {linear_session_id}. Linear is the authoritative task system. "
-            "Follow the workspace AGENTS.md policy, keep the human assignee in control, and link any "
+            f"The named human owner for this session is {owner or 'not provided'}. "
+            "Follow the workspace AGENTS.md policy, keep the human owner in control, and link any "
             "Forgejo pull request in the final response."
         )
         path = "/v1/runs"
@@ -390,7 +415,7 @@ class Bridge:
                 self.hermes(f"/v1/runs/{run_id}/steer", method="POST", body={"input": text})
                 self.activity(linear_session_id, "thought", body="Follow-up guidance was added to the run.")
         else:
-            self.start_run(linear_session_id, text)
+            self.start_run(linear_session_id, text, human_owner(payload))
 
     def process(self, event: dict[str, Any]) -> None:
         linear_session_id = str(event.get("linearSessionId") or "")
@@ -399,13 +424,13 @@ class Bridge:
         action = str(event.get("action") or "created")
         state = self.session_state(linear_session_id)
         if action == "created":
-            if not has_human_assignee(event["payload"]):
+            if not has_human_owner(event["payload"]):
                 self.activity(
                     linear_session_id,
                     "elicitation",
                     body=(
-                        "This issue needs a named human assignee before an agent can work on it. "
-                        "Assign a human owner, then mention or delegate to this agent again."
+                        "This agent session needs a named human creator before work can start. "
+                        "Have a human mention or delegate to this agent again."
                     ),
                 )
                 return
@@ -414,7 +439,7 @@ class Bridge:
             text = prompt_text(event["payload"])
             if not text:
                 raise BridgeError("Linear created event did not include promptContext")
-            self.start_run(linear_session_id, text)
+            self.start_run(linear_session_id, text, human_owner(event["payload"]))
         elif action == "prompted":
             self.handle_prompt(event, state)
         else:
@@ -484,7 +509,7 @@ def main() -> None:
     handoff.add_argument("--title", required=True)
     handoff.add_argument("--description", required=True)
     args = parser.parse_args()
-    bridge = Bridge(Config.from_env())
+    bridge = Bridge(Config.from_env(require_hermes=args.command != "handoff"))
     if args.command == "handoff":
         if args.target == bridge.config.role:
             raise BridgeError("handoff target must be a different role")

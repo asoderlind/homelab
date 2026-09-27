@@ -95,8 +95,9 @@ Linear is the authoritative task surface. Each role also exposes an
 authenticated Hermes API on a distinct loopback-only port and runs a small
 outbound polling bridge. A Cloudflare Worker receives signed Linear Agent
 Session webhooks and queues them in D1, so no Hyperion port is public. Humans
-remain issue assignees while the Coordinator, Developer, or Ops app is the
-delegate. Forgejo remains the source and pull-request host; Buzz remains a
+remain accountable as Agent Session creators while the Coordinator, Developer,
+or Ops app handles the delegated work. Forgejo remains the source and
+pull-request host; Buzz remains a
 private fallback communication path. See
 [`integrations/linear-agent-relay/README.md`](integrations/linear-agent-relay/README.md)
 for the Worker, OAuth application, secret, and smoke-test bootstrap.
