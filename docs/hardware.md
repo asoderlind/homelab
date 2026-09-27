@@ -1,8 +1,8 @@
 # Homelab hardware
 
 The Dell runs the main homelab services, Hyperion hosts the agent lab, and the
-two Raspberry Pis are separate Debian machines scraped as additional `node`
-targets by Prometheus. The relevant scrape configuration lives in
+two Raspberry Pis are separate Debian machines. Prometheus scrapes the Dell
+and Raspberry Pi 5 as `node` targets. The relevant scrape configuration lives in
 `hosts/dell/services/prometheus.nix`.
 
 ## Compute
@@ -14,8 +14,8 @@ targets by Prometheus. The relevant scrape configuration lives in
 | `rpi5` | Raspberry Pi 5 Model B (Rev 1.1) | Broadcom BCM2712 — quad Cortex-A76, 2.4 GHz | 16 GB | 32 GB microSD | Debian 12 (bookworm) |
 | `rpi3` | Raspberry Pi 3 Model B (Rev 1.2) | Broadcom BCM2837 — quad Cortex-A53, 1.2 GHz | 1 GB | 16 GB microSD | Debian 13 (trixie) |
 
-The `dell`, `rpi5`, and `rpi3` names are Prometheus `instance` labels. Hyperion
-is also scraped as `hyperion` by the Dell Prometheus server.
+The `dell` and `rpi5` names are Prometheus `instance` labels. Hyperion is not
+scraped by the Dell Prometheus server.
 
 ## Network
 
