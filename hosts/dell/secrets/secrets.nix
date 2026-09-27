@@ -65,4 +65,8 @@ in
     dell
     axel
   ];
+  "ugreen-media.age".publicKeys = [
+    dell
+    axel
+  ];
 }
