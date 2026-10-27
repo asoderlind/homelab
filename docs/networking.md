@@ -37,6 +37,7 @@ use localhost except Transmission, which lives in a network namespace.
 | `actual.soderlind.dev` | `127.0.0.1:5006` | 50 MB body limit for budget-file sync |
 | `kavita.soderlind.dev` | `127.0.0.1:5000` | WebSockets for scan and reading events |
 | `rss.soderlind.dev` | `127.0.0.1:18069` | Miniflux; security headers from Poseidon |
+| `chat.soderlind.dev` | `127.0.0.1:8081` | Open WebUI; WebSockets and unbuffered chat streaming |
 | `music.soderlind.dev` | `127.0.0.1:4533` | Navidrome; Subsonic apps use the same URL |
 | `transmission.soderlind.dev` | `10.233.0.2:9091` | Veth into the VPN namespace; see below |
 

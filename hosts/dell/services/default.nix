@@ -23,5 +23,6 @@
     ./kavita.nix
     ./miniflux.nix
     ./navidrome.nix
+    ./open-webui.nix
   ];
 }

@@ -443,6 +443,34 @@ anyone on the tailnet could claim it. The library is
 user only needs read access, which the media tree's default permissions
 provide). No secrets in the repo.
 
+## Open WebUI (chat.soderlind.dev)
+
+Runs the prebuilt `ghcr.io/open-webui/open-webui:v0.11.0` image through
+rootless Podman as `axel`, avoiding a local frontend build. Upgrades are manual:
+change the pinned release tag in `hosts/dell/services/open-webui.nix`.
+
+Deploy Dell using the commands above, then immediately visit
+`https://chat.soderlind.dev` while connected to Tailscale. Create your account:
+the first account becomes administrator, so any tailnet member could claim it
+until you do. In **Admin Panel → Settings → Connections**, edit the OpenAI
+connection, confirm the URL is `https://openrouter.ai/api/v1`, enter your
+OpenRouter API key, and save. Select a model and send a test message.
+Disable new signups in the admin settings after creating your account.
+
+The key is stored in Open WebUI's persistent database, never in Nix source or
+the Nix store. Admin connection settings persist across restarts and take
+precedence over the initial environment defaults. State (including the key,
+accounts, chats, and uploads) lives in `/var/lib/open-webui-container`; the existing restic
+jobs do not back it up. Stop `podman-open-webui.service` before copying this directory
+for a consistent manual backup, then start it again.
+
+The earlier native service's `/var/lib/open-webui` directory, if present, is
+retained but is not automatically migrated into the container.
+
+Check the service on Dell with `sudo systemctl status podman-open-webui` and
+`sudo journalctl -u podman-open-webui -n 50`. The backend binds only to
+`127.0.0.1:8081`; access goes through the existing HTTPS proxy.
+
 ## Monitoring
 
 Prometheus (`:9001`) + Alertmanager → Telegram. Alert rules live in
