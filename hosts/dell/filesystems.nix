@@ -106,7 +106,9 @@
   # without a reboot. Their own After= on the mount keeps the ordering right.
   systemd.services.jellyfin.wantedBy = [ "mnt-backup.mount" ];
   systemd.services.kavita.wantedBy = [ "mnt-backup.mount" ];
-  systemd.services.navidrome.wantedBy = [ "mnt-backup.mount" ];
+  systemd.services.navidrome = lib.mkIf config.services.navidrome.enable {
+    wantedBy = [ "mnt-backup.mount" ];
+  };
   systemd.services.samba-smbd.wantedBy = [ "mnt-backup.mount" ];
   systemd.services.transmission.wantedBy = [ "mnt-backup.mount" ];
 }

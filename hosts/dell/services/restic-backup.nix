@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 let
   # ---------------------------------------------------------------------
   # Hetzner Object Storage (S3-compatible) holding the off-site copy.
@@ -280,7 +280,7 @@ in
   # snapshot takes). Only the DB is worth keeping - cache/ is regenerable
   # image/transcode scratch; the music files themselves live on
   # /mnt/backup/media like the rest of the media tree and are not backed up.
-  services.restic.backups.navidrome = {
+  services.restic.backups.navidrome = lib.mkIf config.services.navidrome.enable {
     repository = "/mnt/backup/restic/navidrome";
     passwordFile = config.age.secrets.restic-password.path;
     initialize = true;
@@ -312,7 +312,7 @@ in
     '';
   };
 
-  services.restic.backups.navidrome-offsite = {
+  services.restic.backups.navidrome-offsite = lib.mkIf config.services.navidrome.enable {
     repository = "s3:https://${offsiteEndpoint}/${offsiteBucket}/navidrome";
     passwordFile = config.age.secrets.restic-password.path;
     environmentFile = config.age.secrets.restic-offsite-env.path;
@@ -370,7 +370,7 @@ in
   };
 
   # And for the local navidrome job.
-  systemd.services.restic-backups-navidrome = {
+  systemd.services.restic-backups-navidrome = lib.mkIf config.services.navidrome.enable {
     path = [ pkgs.util-linux ];
     wants = [ "mnt-backup.mount" ];
     after = [ "mnt-backup.mount" ];

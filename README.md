@@ -430,12 +430,16 @@ database, backed up via the nextcloud restic jobs (see above).
 
 ## Navidrome (music.soderlind.dev)
 
+Currently disabled because the configured music library
+(`/mnt/backup/media/torrents/music`) is unavailable. Its backup jobs and nginx
+vhost are disabled with it; existing state and backup repositories are retained.
+
 Music streaming server; Subsonic-compatible mobile apps (Symfonium,
 substreamer, play:Sub, …) log in with the same URL and account. Same
 first-visit caveat as Actual and Kavita: **create the admin account at
 `https://music.soderlind.dev` right after the first deploy** — until then
 anyone on the tailnet could claim it. The library is
-`/mnt/backup/media/music` (create the directory first; the `navidrome`
+`/mnt/backup/media/torrents/music` (create the directory first; the `navidrome`
 user only needs read access, which the media tree's default permissions
 provide). No secrets in the repo.
 

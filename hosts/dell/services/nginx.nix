@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 {
   # Contains CLOUDFLARE_DNS_API_TOKEN=<token scoped to Zone.DNS edit on
   # soderlind.dev>. The host is only reachable over Tailscale, so HTTP-01
@@ -110,7 +110,7 @@
       '';
     };
 
-    virtualHosts."music.soderlind.dev" = {
+    virtualHosts."music.soderlind.dev" = lib.mkIf config.services.navidrome.enable {
       forceSSL = true;
       useACMEHost = "soderlind.dev";
       locations."/" = {

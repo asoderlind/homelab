@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 {
   # Navidrome - music streaming server with a web player and a
   # Subsonic-compatible API (mobile apps like Symfonium/substreamer point
@@ -7,7 +7,8 @@
   # backed up by the 'navidrome' restic jobs in restic-backup.nix. The
   # admin account is created on first visit.
   services.navidrome = {
-    enable = true;
+    # Disabled while the music library is unavailable. Keep state for later.
+    enable = false;
     settings = {
       # Bind loopback only; nginx terminates TLS and, being reachable just
       # via tailscale0, is the only way in (see nginx.nix / networking.nix).
@@ -22,5 +23,7 @@
   # The library lives on the nofail media mount: without this the service
   # would start against an empty /mnt/backup and a scan would mark the
   # whole library as missing.
-  systemd.services.navidrome.unitConfig.RequiresMountsFor = [ "/mnt/backup" ];
+  systemd.services.navidrome = lib.mkIf config.services.navidrome.enable {
+    unitConfig.RequiresMountsFor = [ "/mnt/backup" ];
+  };
 }
