@@ -10,7 +10,7 @@
   virtualisation.oci-containers.backend = "podman";
   virtualisation.oci-containers.containers.open-webui = {
     # Match the previous native package version; no local frontend build.
-    image = "ghcr.io/open-webui/open-webui:v0.11.0";
+    image = "ghcr.io/open-webui/open-webui:v0.12.5";
     autoStart = true;
     podman.user = "axel";
     # Root inside this rootless container maps to axel on the host.
