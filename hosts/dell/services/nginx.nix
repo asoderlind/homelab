@@ -121,6 +121,17 @@
       };
     };
 
+    virtualHosts."bunko.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:8000";
+        extraConfig = ''
+          client_max_body_size 25m;
+        '';
+      };
+    };
+
     virtualHosts."habits.soderlind.dev" = {
       forceSSL = true;
       useACMEHost = "soderlind.dev";

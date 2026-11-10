@@ -471,6 +471,44 @@ Check the service on Dell with `sudo systemctl status podman-open-webui` and
 `sudo journalctl -u podman-open-webui -n 50`. The backend binds only to
 `127.0.0.1:8081`; access goes through the existing HTTPS proxy.
 
+## Bunko (bunko.soderlind.dev)
+
+Runs `ghcr.io/asoderlind/bunko:0.0.1` as one rootless Podman container. The
+GitHub Actions publish workflow builds the image for Dell's `x86_64-linux`
+architecture. SQLite and uploaded media persist under `/var/lib/bunko`.
+Nginx terminates HTTPS using the existing `soderlind.dev` wildcard certificate.
+
+Before the first deploy, create the missing encrypted runtime environment:
+
+```sh
+cd hosts/dell/secrets
+EDITOR=vim agenix -e bunko-env.age -i ~/.ssh/id_ed25519
+```
+
+The file should contain a generated application key and any optional provider
+credentials, for example:
+
+```text
+SECRET_KEY=<at-least-32-random-characters>
+OLLAMA_API_KEY=
+```
+
+No inference provider is configured yet, so notes work but automatic tagging is
+inactive until an OpenAI-compatible endpoint is added to `bunko.nix` or the
+secret. After deploying, create the initial user interactively:
+
+```sh
+sudo -u axel env XDG_RUNTIME_DIR=/run/user/1000 \
+  podman exec -it bunko python -m app.cli set-password --username axel
+```
+
+Then visit `https://bunko.soderlind.dev`. Check the service with
+`sudo systemctl status podman-bunko` and inspect logs with
+`sudo journalctl -u podman-bunko -n 50`.
+
+Bunko state is not yet included in the existing Restic jobs; add a consistent
+SQLite backup after validating the initial deployment.
+
 ## Monitoring
 
 Prometheus (`:9001`) + Alertmanager → Telegram. Alert rules live in

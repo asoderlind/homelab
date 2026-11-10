@@ -69,4 +69,9 @@ in
     dell
     axel
   ];
+  # Bunko runtime environment: SECRET_KEY and optional provider credentials.
+  "bunko-env.age".publicKeys = [
+    dell
+    axel
+  ];
 }

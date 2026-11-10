@@ -24,5 +24,6 @@
     ./miniflux.nix
     ./navidrome.nix
     ./open-webui.nix
+    ./bunko.nix
   ];
 }
