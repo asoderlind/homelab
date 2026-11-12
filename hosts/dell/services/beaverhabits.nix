@@ -21,7 +21,8 @@
     # this digest is what `latest` pointed to on 2026-05-20, the v0.9.1
     # release date. Re-pin deliberately when upgrading.
     image = "daya0576/beaverhabits@sha256:6cd7e464207369785c88cfd59f99c6cc44ec57f3a8d90c3439908da42271d69f";
-    autoStart = true;
+    # Keep the container definition and persistent state, but do not start the service.
+    autoStart = false;
     user = "1000:1000";
     environment = {
       HABITS_STORAGE = "DATABASE";

@@ -132,7 +132,7 @@
       };
     };
 
-    virtualHosts."habits.soderlind.dev" = {
+    virtualHosts."habits.soderlind.dev" = lib.mkIf config.virtualisation.oci-containers.containers.beaverhabits.autoStart {
       forceSSL = true;
       useACMEHost = "soderlind.dev";
       locations."/" = {
