@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 {
   # Contains CLOUDFLARE_DNS_API_TOKEN=<token scoped to Zone.DNS edit on
   # soderlind.dev>. The host is only reachable over Tailscale, so HTTP-01
@@ -118,6 +118,65 @@
         # No proxyWebsockets: Navidrome pushes UI/scan events over SSE, and
         # marks those responses X-Accel-Buffering: no itself, so nginx's
         # default buffering doesn't stall them either.
+      };
+    };
+
+    virtualHosts."home.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      root = pkgs.writeTextDir "index.html" ''
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <meta name="color-scheme" content="dark light">
+          <title>Home · Axel's services</title>
+          <style>
+            :root { color-scheme: dark; --bg:#10141c; --panel:#191f2b; --ink:#eef2f8; --muted:#aab4c4; --accent:#8eb5ff; }
+            * { box-sizing:border-box }
+            body { margin:0; min-height:100vh; background:radial-gradient(ellipse at top,#202b40,var(--bg) 65%); color:var(--ink); font:16px/1.5 system-ui,sans-serif }
+            main { width:min(900px,calc(100% - 2rem)); margin:0 auto; padding:5rem 0 }
+            h1 { margin:0; font-size:clamp(2rem,6vw,3.5rem); letter-spacing:-.04em }
+            p { margin:.5rem 0 2rem; color:var(--muted) }
+            .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem }
+            a { display:block; padding:1.15rem 1.25rem; border:1px solid #303a4b; border-radius:14px; background:var(--panel); color:var(--ink); text-decoration:none; transition:transform .15s,border-color .15s }
+            a:hover, a:focus-visible { transform:translateY(-2px); border-color:var(--accent); outline:none }
+            strong { display:block; color:var(--accent); font-size:1.1rem }
+            small { color:var(--muted) }
+          </style>
+        </head>
+        <body>
+          <main>
+            <h1>Home</h1>
+            <p>Personal services</p>
+            <nav class="grid" aria-label="Services">
+              <a href="https://jobs.soderlind.dev"><strong>Shoku</strong><small>Job search and application dashboard</small></a>
+              <a href="https://bunko.soderlind.dev"><strong>Bunko</strong><small>Notes</small></a>
+              <a href="https://habits.soderlind.dev"><strong>Habits</strong><small>Habit tracking</small></a>
+              <a href="https://drive.soderlind.dev"><strong>Nextcloud</strong><small>Files and collaboration</small></a>
+              <a href="https://actual.soderlind.dev"><strong>Actual</strong><small>Budgeting</small></a>
+              <a href="https://rss.soderlind.dev"><strong>Miniflux</strong><small>RSS reader</small></a>
+              <a href="https://grafana.soderlind.dev"><strong>Grafana</strong><small>Monitoring dashboards</small></a>
+              <a href="https://chat.soderlind.dev"><strong>Open WebUI</strong><small>AI chat</small></a>
+              <a href="https://jellyfin.soderlind.dev"><strong>Jellyfin</strong><small>Movies and TV</small></a>
+              <a href="https://kavita.soderlind.dev"><strong>Kavita</strong><small>Books and comics</small></a>
+              <a href="https://music.soderlind.dev"><strong>Navidrome</strong><small>Music</small></a>
+              <a href="https://transmission.soderlind.dev"><strong>Transmission</strong><small>Torrent client</small></a>
+              <a href="https://buzz.soderlind.dev"><strong>Buzz</strong><small>Agent lab</small></a>
+              <a href="https://forgejo.soderlind.dev"><strong>Forgejo</strong><small>Git hosting</small></a>
+            </nav>
+          </main>
+        </body>
+        </html>
+      '';
+    };
+
+    virtualHosts."jobs.soderlind.dev" = {
+      forceSSL = true;
+      useACMEHost = "soderlind.dev";
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:8770";
       };
     };
 

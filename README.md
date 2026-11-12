@@ -26,6 +26,29 @@ The tailnet-only ingress model, DNS and TLS setup, vhost routing, and
 Transmission's isolated Proton VPN egress are documented in
 [docs/networking.md](docs/networking.md).
 
+## Dell services
+
+- `https://home.soderlind.dev` is a lightweight static index of the homelab apps.
+- `https://jobs.soderlind.dev` routes to Shoku, deployed as the rootless Podman
+  container from `ghcr.io/asoderlind/shoku:main`. Its SQLite state is persisted
+  at `/var/lib/shoku`. CV and resume authoring remain separate from Shoku.
+- The `shoku` GHCR package must be public for the server to pull anonymously.
+  If it remains private, authenticate rootless Podman as `axel` to GHCR before
+  deploying. Shoku requires a password and cookie-signing key; after the first
+  activation, set them in `/var/lib/shoku/shoku.env` on Dell and restart
+  `podman-shoku.service`:
+
+  ```sh
+  sudoedit /var/lib/shoku/shoku.env
+  # SECRET_KEY=<output of openssl rand -base64 48>
+  # SHOKU_PASSWORD=<a strong sign-in password>
+  sudo systemctl restart podman-shoku.service
+  ```
+
+  The environment file is readable only by the rootless `axel` service user.
+  Shoku has no other access controls, so the hostnames remain reachable only
+  through the tailnet-protected nginx ingress.
+
 ## Deploying
 
 Deployments are manual and host-specific. Validate both configurations and
