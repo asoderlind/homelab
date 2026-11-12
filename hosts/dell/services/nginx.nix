@@ -153,7 +153,6 @@
             <nav class="grid" aria-label="Services">
               <a href="https://jobs.soderlind.dev"><strong>Shoku</strong><small>Job search and application dashboard</small></a>
               <a href="https://bunko.soderlind.dev"><strong>Bunko</strong><small>Notes</small></a>
-              <a href="https://habits.soderlind.dev"><strong>Habits</strong><small>Habit tracking</small></a>
               <a href="https://drive.soderlind.dev"><strong>Nextcloud</strong><small>Files and collaboration</small></a>
               <a href="https://actual.soderlind.dev"><strong>Actual</strong><small>Budgeting</small></a>
               <a href="https://rss.soderlind.dev"><strong>Miniflux</strong><small>RSS reader</small></a>
@@ -161,10 +160,7 @@
               <a href="https://chat.soderlind.dev"><strong>Open WebUI</strong><small>AI chat</small></a>
               <a href="https://jellyfin.soderlind.dev"><strong>Jellyfin</strong><small>Movies and TV</small></a>
               <a href="https://kavita.soderlind.dev"><strong>Kavita</strong><small>Books and comics</small></a>
-              <a href="https://music.soderlind.dev"><strong>Navidrome</strong><small>Music</small></a>
               <a href="https://transmission.soderlind.dev"><strong>Transmission</strong><small>Torrent client</small></a>
-              <a href="https://buzz.soderlind.dev"><strong>Buzz</strong><small>Agent lab</small></a>
-              <a href="https://forgejo.soderlind.dev"><strong>Forgejo</strong><small>Git hosting</small></a>
             </nav>
           </main>
         </body>
