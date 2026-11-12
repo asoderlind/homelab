@@ -32,9 +32,6 @@
       DATABASE_URL = "sqlite:////data/bunko.sqlite3";
       DEBUG = "0";
       ALLOWED_HOSTS = "bunko.soderlind.dev,127.0.0.1";
-      # No inference provider is configured yet. The app remains usable;
-      # tagging waits until an OpenAI-compatible endpoint is added later.
-      OLLAMA_BASE_URL = "";
       TAGGING_POLL_SECONDS = "2";
     };
     environmentFiles = [ config.age.secrets.bunko-env.path ];

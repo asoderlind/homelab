@@ -485,17 +485,16 @@ cd hosts/dell/secrets
 EDITOR=vim agenix -e bunko-env.age -i ~/.ssh/id_ed25519
 ```
 
-The file should contain a generated application key and any optional provider
-credentials, for example:
+The file should contain a generated application key, for example:
 
 ```text
 SECRET_KEY=<at-least-32-random-characters>
-OLLAMA_API_KEY=
 ```
 
-No inference provider is configured yet, so notes work but automatic tagging is
-inactive until an OpenAI-compatible endpoint is added to `bunko.nix` or the
-secret. After deploying, create the initial user interactively:
+No inference provider is configured in Nix. After deploying, create the initial
+user interactively, then add OpenRouter from the Bunko **Settings** page using
+`https://openrouter.ai/api/v1`, a model name, and the API key. After deploying,
+create the initial user interactively:
 
 ```sh
 sudo -u axel env XDG_RUNTIME_DIR=/run/user/1000 \
