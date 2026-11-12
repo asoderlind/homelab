@@ -74,4 +74,9 @@ in
     dell
     axel
   ];
+  # Shoku runtime environment: SECRET_KEY and SHOKU_PASSWORD.
+  "shoku-env.age".publicKeys = [
+    dell
+    axel
+  ];
 }

@@ -1,10 +1,17 @@
-{ ... }:
+{ config, ... }:
 {
+  # Runtime SECRET_KEY and SHOKU_PASSWORD; rootless Podman needs read access.
+  age.secrets.shoku-env = {
+    file = ../secrets/shoku-env.age;
+    owner = "axel";
+    group = "users";
+    mode = "0400";
+  };
+
   # Shoku job dashboard. The GHCR package must be public for unattended
   # anonymous pulls; use a version tag instead of :main to pin releases.
   systemd.tmpfiles.rules = [
     "d /var/lib/shoku 0750 axel users - -"
-    "f /var/lib/shoku/shoku.env 0400 axel users - -"
   ];
 
   virtualisation.oci-containers.backend = "podman";
@@ -27,7 +34,7 @@
       JOBDASH_DATA_DIR = "/app/data";
       SHOKU_COOKIE_SECURE = "1";
     };
-    environmentFiles = [ "/var/lib/shoku/shoku.env" ];
+    environmentFiles = [ config.age.secrets.shoku-env.path ];
     volumes = [
       "/var/lib/shoku:/app/data"
     ];
