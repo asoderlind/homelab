@@ -30,7 +30,7 @@ Transmission's isolated Proton VPN egress are documented in
 
 - `https://home.soderlind.dev` is a lightweight static index of the homelab apps.
 - `https://jobs.soderlind.dev` routes to Shoku, deployed as the rootless Podman
-  container from `ghcr.io/asoderlind/shoku:main`. Its SQLite state is persisted
+  container from `ghcr.io/asoderlind/shoku:2.2.0`. Its SQLite state is persisted
   at `/var/lib/shoku`. CV and resume authoring remain separate from Shoku.
 - The `shoku` GHCR package must be public for the server to pull anonymously.
   If it remains private, authenticate rootless Podman as `axel` to GHCR before
@@ -502,7 +502,7 @@ Check the service on Dell with `sudo systemctl status podman-open-webui` and
 
 ## Bunko (bunko.soderlind.dev)
 
-Runs `ghcr.io/asoderlind/bunko:0.0.1` as one rootless Podman container. The
+Runs `ghcr.io/asoderlind/bunko:0.0.3` as one rootless Podman container. The
 GitHub Actions publish workflow builds the image for Dell's `x86_64-linux`
 architecture. SQLite and uploaded media persist under `/var/lib/bunko`.
 Nginx terminates HTTPS using the existing `soderlind.dev` wildcard certificate.
@@ -536,6 +536,23 @@ Then visit `https://bunko.soderlind.dev`. Check the service with
 
 Bunko state is not yet included in the existing Restic jobs; add a consistent
 SQLite backup after validating the initial deployment.
+
+## Updating Bunko and Shoku releases
+
+Both apps publish full-version image tags from Git tags (`vX.Y.Z` → `:X.Y.Z`).
+Wait for the app's publish workflow and GitHub release to succeed before changing
+HomeLab; a changelog entry alone does not mean the image is available.
+
+The configured release pins are Bunko **0.0.3** and Shoku **2.2.0** in:
+
+- `hosts/dell/services/bunko.nix`: `ghcr.io/asoderlind/bunko:0.0.3`
+- `hosts/dell/services/shoku.nix`: `ghcr.io/asoderlind/shoku:2.2.0`
+
+Commit those changes and run the normal Dell NixOS rebuild/deployment. Check
+`podman-bunko` and `podman-shoku` service status and logs afterward. Repeat with
+the exact full version for later releases; avoid moving `main` or `latest` tags
+for production. Confirm the pinned images have finished publishing before deploying.
+Back up app data first: reverting an image pin does not revert database changes.
 
 ## Monitoring
 

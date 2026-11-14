@@ -18,7 +18,7 @@
   virtualisation.oci-containers.containers.bunko = {
     # The release workflow publishes this tag as linux/amd64 for Dell.
     # Pin to an image digest after inspecting the release if desired.
-    image = "ghcr.io/asoderlind/bunko:0.0.1";
+    image = "ghcr.io/asoderlind/bunko:0.0.3";
     autoStart = true;
     podman.user = "axel";
 
