@@ -1,4 +1,5 @@
-# Builds both full system closures on pushes to master and pull requests.
+# Builds Dell's full system closure on pushes to master and pull requests.
+# Hyperion is inactive; its configuration is retained but not built in CI.
 # Note: does not fire on PRs opened by flake-update.yml (GITHUB_TOKEN PRs
 # don't trigger pull_request workflows) — that workflow validates inline.
 name: ci
@@ -39,9 +40,9 @@ jobs:
             min-free = 5368709120
             max-free = 10737418240
 
-      - name: Build system closures
+      - name: Build Dell system closure
         run: |
-          for host in dell hyperion; do
+          for host in dell; do
             nix build ".#nixosConfigurations.${host}.config.system.build.toplevel" \
               --out-link "result-${host}" --print-build-logs
           done

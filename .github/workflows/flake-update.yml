@@ -1,4 +1,5 @@
-# Weekly flake.lock update: builds both system closures before and after the
+# Hyperion is inactive and excluded from builds and closure comparisons.
+# Weekly flake.lock update: builds Dell's system closure before and after the
 # update, and opens a PR whose body contains per-input compare links and the
 # closure diff. CI validation happens here (not in ci.yml) because PRs
 # created with the default GITHUB_TOKEN do not trigger pull_request
@@ -52,9 +53,9 @@ jobs:
             min-free = 5368709120
             max-free = 10737418240
 
-      - name: Build current system closures
+      - name: Build current Dell system closure
         run: |
-          for host in dell hyperion; do
+          for host in dell; do
             nix build ".#nixosConfigurations.${host}.config.system.build.toplevel" \
               --out-link "result-old-${host}" --print-build-logs
           done
@@ -70,10 +71,10 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build updated system closures
+      - name: Build updated Dell system closure
         if: steps.update.outputs.changed == 'true'
         run: |
-          for host in dell hyperion; do
+          for host in dell; do
             nix build ".#nixosConfigurations.${host}.config.system.build.toplevel" \
               --out-link "result-new-${host}" --print-build-logs
           done
@@ -85,7 +86,8 @@ jobs:
         run: |
           {
             echo "Automated weekly \`nix flake update\`. Both the old and new"
-            echo "system closures for both hosts built successfully in CI. Review the input"
+            echo "system closures for Dell built successfully in CI. Hyperion is inactive and not validated."
+            echo "Review the input"
             echo "ranges and the closure diff, merge, then deploy manually."
             echo
             echo "### Input changes"
@@ -103,7 +105,7 @@ jobs:
           done
             echo
             echo "### Closure diff"
-            for host in dell hyperion; do
+            for host in dell; do
               echo
               echo "#### \`${host}\`"
               echo '```'
