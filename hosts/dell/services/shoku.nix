@@ -16,7 +16,7 @@
 
   virtualisation.oci-containers.backend = "podman";
   virtualisation.oci-containers.containers.shoku = {
-    image = "ghcr.io/asoderlind/shoku:2.2.1";
+    image = "ghcr.io/asoderlind/shoku:2.3.0";
     autoStart = true;
     podman.user = "axel";
 
