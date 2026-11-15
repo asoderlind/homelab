@@ -23,6 +23,13 @@ The rack contains a
 [Ubiquiti UniFi Switch Lite 8 PoE (USW-Lite-8-PoE)](https://amzn.to/4xnZNK2),
 installed in the top 1U position. This is connected by cable to a UniFi dream router.
 
+## Power
+
+The rack is backed by a dedicated UPS: a CyberPower Systems ValuePRO
+line-interactive unit rated 1200 VA / 720 W, model `VP1200ELCD`, with five
+Schuko outlets. It is a tower-format unit rather than rack hardware, so it does
+not occupy a U in the layout below.
+
 ## Storage
 
 A diskless
