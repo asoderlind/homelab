@@ -30,6 +30,10 @@ line-interactive unit rated 1200 VA / 720 W, model `VP1200ELCD`, with five
 Schuko outlets. It is a tower-format unit rather than rack hardware, so it does
 not occupy a U in the layout below.
 
+No USB monitoring is wired up. The unit simply passes mains power through, so
+there is no telemetry and no automatic shutdown on power loss — the hosts keep
+running until the battery is exhausted.
+
 ## Storage
 
 A diskless
