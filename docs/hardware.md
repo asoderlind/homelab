@@ -1,8 +1,9 @@
 # Homelab hardware
 
-The Dell runs the main homelab services, Hyperion hosts the agent lab, and the
-two Raspberry Pis are separate Debian machines. Prometheus scrapes the Dell
-and Raspberry Pi 5 as `node` targets. The relevant scrape configuration lives in
+The Dell runs the main homelab services, Hyperion hosts the agent lab, the
+OptiPlex 3080s form a Proxmox VE cluster, and the two Raspberry Pis are
+separate Debian machines. Prometheus scrapes the Dell and Raspberry Pi 5 as
+`node` targets. The relevant scrape configuration lives in
 `hosts/dell/services/prometheus.nix`.
 
 ## Compute
@@ -11,11 +12,17 @@ and Raspberry Pi 5 as `node` targets. The relevant scrape configuration lives in
 | --- | --- | --- | --- | --- | --- |
 | `dell` | Dell OptiPlex 3040 | Intel Core i5-6500T — 4C/4T, 2.5 GHz (Skylake) | 8 GB | 500 GB internal SATA HDD (Toshiba MQ01ACF050) | NixOS 26.05 |
 | `hyperion` | HP EliteDesk 800 G3 | Intel Core i7-7700 — 4C/8T, 3.6 GHz (Kaby Lake) | 16 GB | 256 GB Samsung NVMe | NixOS 26.05 |
+| `pve1` | Dell OptiPlex 3080 | Intel Core i5-10500T — 6C/12T, 2.3 GHz (Comet Lake) | 32 GB (31.09 GiB usable) | 67.73 GiB root filesystem, 4.22 GiB used | Proxmox VE 9.2.2 |
 | `rpi5` | Raspberry Pi 5 Model B (Rev 1.1) | Broadcom BCM2712 — quad Cortex-A76, 2.4 GHz | 16 GB | 32 GB microSD | Debian 12 (bookworm) |
 | `rpi3` | Raspberry Pi 3 Model B (Rev 1.2) | Broadcom BCM2837 — quad Cortex-A53, 1.2 GHz | 1 GB | 16 GB microSD | Debian 13 (trixie) |
 
 The `dell` and `rpi5` names are Prometheus `instance` labels. Hyperion is not
 scraped by the Dell Prometheus server.
+
+`pve1` is the first of three OptiPlex 3080s planned for the Proxmox cluster;
+the other two have not been provisioned yet. It boots in EFI mode on kernel
+`7.0.2-6-pve` with an 8 GiB swap volume, and storage is local to the node.
+Cluster provisioning notes are in the [README](../README.md#proxmox-cluster).
 
 ## Network
 
