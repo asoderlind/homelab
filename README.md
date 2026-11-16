@@ -53,7 +53,7 @@ Transmission's isolated Proton VPN egress are documented in
 
 - `https://home.soderlind.dev` is a lightweight static index of the homelab apps.
 - `https://jobs.soderlind.dev` routes to Shoku, deployed as the rootless Podman
-  container from `ghcr.io/asoderlind/shoku:2.2.1`. Its SQLite state is persisted
+  container from `ghcr.io/asoderlind/shoku:2.4.0`. Its SQLite state is persisted
   at `/var/lib/shoku`. CV and resume authoring remain separate from Shoku.
 - The `shoku` GHCR package must be public for the server to pull anonymously.
   If it remains private, authenticate rootless Podman as `axel` to GHCR before
@@ -566,10 +566,10 @@ Both apps publish full-version image tags from Git tags (`vX.Y.Z` → `:X.Y.Z`).
 Wait for the app's publish workflow and GitHub release to succeed before changing
 HomeLab; a changelog entry alone does not mean the image is available.
 
-The configured release pins are Bunko **0.0.4** and Shoku **2.2.1** in:
+The configured release pins are Bunko **0.0.4** and Shoku **2.4.0** in:
 
 - `hosts/dell/services/bunko.nix`: `ghcr.io/asoderlind/bunko:0.0.4`
-- `hosts/dell/services/shoku.nix`: `ghcr.io/asoderlind/shoku:2.2.1`
+- `hosts/dell/services/shoku.nix`: `ghcr.io/asoderlind/shoku:2.4.0`
 
 Commit those changes and run the normal Dell NixOS rebuild/deployment. Check
 `podman-bunko` and `podman-shoku` service status and logs afterward. Repeat with
