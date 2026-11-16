@@ -73,23 +73,29 @@ TOP -- GEEKPI T1 8U 10-INCH DESK RACK
 +------------------------------------------------------+  2.5U
 | HP EliteDesk / hyperion (1U)                         |
 +------------------------------------------------------+  3.5U
-| Dell OptiPlex / dell (1U)                            |
-+------------------------------------------------------+  4.5U
 | External backup HDD (1U)                             |
++------------------------------------------------------+  4.5U
+| Dell OptiPlex / dell (1U)                            |
 +------------------------------------------------------+  5.5U
-|          FREE / UNALLOCATED IN T1 RACK (2.5U)        |
-|                                                      |
+| Dell OptiPlex 3080 / pve1 (1U)                       |
++------------------------------------------------------+  6.5U
+| Dell OptiPlex 3080 (1U, not yet provisioned)         |
++------------------------------------------------------+  7.5U
+|          FREE / UNALLOCATED IN T1 RACK (0.5U)        |
 +------------------------------------------------------+  8.0U
 T1 / T0 RACK BOUNDARY
 +------------------------------------------------------+  8.0U
+| Dell OptiPlex 3080 (1U, not yet provisioned)         |
++------------------------------------------------------+  9.0U
 |                                                      |
-|          FREE / UNALLOCATED IN T0 RACK (4U)          |
-|                                                      |
+|          FREE / UNALLOCATED IN T0 RACK (3U)          |
 |                                                      |
 +------------------------------------------------------+ 12.0U
 BOTTOM -- GEEKPI T0 4U 10-INCH DESK RACK
 ```
 
-The rack therefore has 6.5U free in total: a contiguous 6U area plus another
-0.5U of unallocated space. The schematic uses 12 interior rows—one per rack
-unit—with exact half-unit boundaries identified by the measurements at right.
+The rack therefore has 3.5U free in total: a contiguous 3U at the bottom of the
+T0 rack plus 0.5U left over at the bottom of T1, since only two of the three
+OptiPlex 3080s fit below `dell` in the 8U upper rack. The schematic uses 12
+interior rows—one per rack unit—with exact half-unit boundaries identified by
+the measurements at right.
