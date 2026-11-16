@@ -20,6 +20,33 @@ Most things are declarative, but a few steps are manual. This is the list.
 The machine inventory, network hardware, storage, monitoring labels, and 12U
 rack layout are documented in [docs/hardware.md](docs/hardware.md).
 
+## Proxmox cluster
+
+A three-node Proxmox VE cluster is being provisioned on the Dell OptiPlex 3080
+machines. One node is installed so far; the remaining two are installed and
+joined later.
+
+| Node | Machine | CPU | RAM | Root filesystem | Proxmox VE |
+| --- | --- | --- | --- | --- | --- |
+| `pve1` | Dell OptiPlex 3080 | Intel Core i5-10500T — 6C/12T, 2.3 GHz | 32 GB (31.09 GiB usable) | 67.73 GiB, 4.22 GiB used | 9.2.2 |
+
+`pve1` boots in EFI mode on kernel `7.0.2-6-pve` and has an 8 GiB swap volume.
+Storage is local to the node; no shared or cluster-wide storage is configured
+while only one node exists.
+
+Two things to know before the cluster grows:
+
+- A node must be **empty** when it joins. Provision the second and third 3080s
+  before putting guests on them, or their workloads have to be moved off first.
+  `pve1` is the exception — it creates the cluster with `pvecm create`, which
+  keeps its existing guests.
+- Fix hostnames and static IPs while each node is still standalone. Renaming a
+  node after it has joined is a remove-and-rejoin operation.
+
+Open item: `pve1` currently has a **non-production-ready repository** enabled,
+which the web UI flags on the summary page. Replace it with the production
+`pve-no-subscription` repository before the node holds anything worth keeping.
+
 ## Networking
 
 The tailnet-only ingress model, DNS and TLS setup, vhost routing, and
