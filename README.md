@@ -13,9 +13,7 @@ Secrets are encrypted with agenix; deployments are manual.
 > **Architecture image coming soon** — a generated overview of the hosts,
 > network, storage, and services.
 
-<!-- Replace the placeholder above with the generated image when ready:
-![Homelab architecture](docs/images/architecture.png)
--->
+![Homelab architecture](https://github.com/user-attachments/assets/7fc3a2f3-0a51-4e0e-8117-4971a42dac20)
 
 ## Documentation
 
