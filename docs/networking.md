@@ -2,7 +2,7 @@
 
 There are two separate concerns: how clients reach services through
 tailnet-only ingress, and how Transmission reaches the internet through a
-Proton VPN split tunnel. Nothing else on either host uses the VPN.
+Proton VPN split tunnel. Nothing else on Dell uses the VPN.
 
 ## Ingress: tailnet-only
 
@@ -43,38 +43,6 @@ use localhost except Transmission, which lives in a network namespace.
 
 Samba and the Prometheus exporter ports follow the same model: they are bound
 normally, reachable only through the tailnet.
-
-### Hyperion ingress
-
-Hyperion uses two explicit DNS-only Cloudflare A records pointing at its
-Tailscale IPv4 address:
-
-- `buzz.soderlind.dev`
-- `forgejo.soderlind.dev`
-
-These records override the `*.soderlind.dev` wildcard that points at Dell.
-Cloudflare proxying must remain disabled because public Cloudflare edges cannot
-route private Tailscale addresses. Hyperion obtains one certificate covering
-both names through Cloudflare DNS-01; a public CA cannot reach the host for an
-HTTP-01 challenge.
-
-nginx is Hyperion's only ingress path. Both applications and the Buzz pairing
-relay bind to loopback, while ports 80 and 443 are reachable only through the
-trusted `tailscale0` interface.
-
-Linear Agent Session ingress terminates at the separately deployed Cloudflare
-Worker under `integrations/linear-agent-relay`. The Worker stores validated
-events in D1 and Hyperion polls it outbound over HTTPS. This does not add a
-Hyperion nginx vhost, Cloudflare Tunnel, or firewall opening.
-
-| Public endpoint | Upstream | Notes |
-| --- | --- | --- |
-| `https://buzz.soderlind.dev` | `127.0.0.1:3000` | Buzz HTTP API, media, and community WebSocket relay |
-| `wss://buzz.soderlind.dev/pair` | `127.0.0.1:5000` | Exact nginx route to the stateless NIP-AB pairing relay |
-| `https://forgejo.soderlind.dev` | `127.0.0.1:3001` | Forgejo web UI, API, and Git-over-HTTPS |
-
-The main Buzz relay advertises `wss://buzz.soderlind.dev/pair` in its NIP-11
-document, allowing Buzz Desktop to discover the pairing service automatically.
 
 ### Adding a Dell service subdomain
 

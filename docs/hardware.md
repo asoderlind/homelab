@@ -1,8 +1,7 @@
 # Homelab hardware
 
-The Dell runs the main homelab services, Hyperion hosts the agent lab, the
-OptiPlex 3080s form a Proxmox VE cluster, and the two Raspberry Pis are
-separate Debian machines. Prometheus scrapes the Dell and Raspberry Pi 5 as
+The Dell runs the main homelab services, the OptiPlex 3080s form a Proxmox VE
+cluster, and the Raspberry Pi 5 runs Debian. Prometheus scrapes the Dell and Raspberry Pi 5 as
 `node` targets. The relevant scrape configuration lives in
 `hosts/dell/services/prometheus.nix`.
 
@@ -11,18 +10,15 @@ separate Debian machines. Prometheus scrapes the Dell and Raspberry Pi 5 as
 | Instance | Machine | CPU | RAM | Storage | OS |
 | --- | --- | --- | --- | --- | --- |
 | `dell` | Dell OptiPlex 3040 | Intel Core i5-6500T — 4C/4T, 2.5 GHz (Skylake) | 8 GB | 500 GB internal SATA HDD (Toshiba MQ01ACF050) | NixOS 26.05 |
-| `hyperion` | HP EliteDesk 800 G3 | Intel Core i7-7700 — 4C/8T, 3.6 GHz (Kaby Lake) | 16 GB | 256 GB Samsung NVMe | NixOS 26.05 |
 | `pve1` | Dell OptiPlex 3080 | Intel Core i5-10500T — 6C/12T, 2.3 GHz (Comet Lake) | 32 GB (31.09 GiB usable) | 67.73 GiB root filesystem, 4.22 GiB used | Proxmox VE 9.2.2 |
 | `rpi5` | Raspberry Pi 5 Model B (Rev 1.1) | Broadcom BCM2712 — quad Cortex-A76, 2.4 GHz | 16 GB | 32 GB microSD | Debian 12 (bookworm) |
-| `rpi3` | Raspberry Pi 3 Model B (Rev 1.2) | Broadcom BCM2837 — quad Cortex-A53, 1.2 GHz | 1 GB | 16 GB microSD | Debian 13 (trixie) |
 
-The `dell` and `rpi5` names are Prometheus `instance` labels. Hyperion is not
-scraped by the Dell Prometheus server.
+The `dell` and `rpi5` names are Prometheus `instance` labels.
 
 `pve1` is the first of three OptiPlex 3080s planned for the Proxmox cluster;
 the other two have not been provisioned yet. It boots in EFI mode on kernel
 `7.0.2-6-pve` with an 8 GiB swap volume, and storage is local to the node.
-Cluster provisioning notes are in the [README](../README.md#proxmox-cluster).
+Cluster provisioning notes are in the [Proxmox guide](proxmox.md).
 
 ## Network
 
@@ -54,7 +50,7 @@ A Western Digital 2 TB USB drive (WD20EARX-00PASB0) is mounted at
 `/mnt/backup` on the Dell and holds the local restic repository. It is mounted
 with `nofail`; the backup jobs verify the mountpoint and fail loudly when it is
 absent. Operational details are in
-[Backups](../README.md#backups-restic--mntbackup).
+[Backups](backups.md).
 
 ## Rack layout
 
@@ -67,11 +63,11 @@ TOP -- GEEKPI T1 8U 10-INCH DESK RACK
 +------------------------------------------------------+  0.0U
 | Ubiquiti USW-Lite-8-PoE switch (1U)                  |
 +------------------------------------------------------+  1.0U
-| Dual Raspberry Pi mount (1U)                         |
+| Raspberry Pi 5 / dual mount (1U, one slot free)       |
 +------------------------------------------------------+  2.0U
 | Patching (0.5U)                                      |
 +------------------------------------------------------+  2.5U
-| HP EliteDesk / hyperion (1U)                         |
+| FREE / UNALLOCATED (1U)                             |
 +------------------------------------------------------+  3.5U
 | External backup HDD (1U)                             |
 +------------------------------------------------------+  4.5U
@@ -94,8 +90,8 @@ T1 / T0 RACK BOUNDARY
 BOTTOM -- GEEKPI T0 4U 10-INCH DESK RACK
 ```
 
-The rack therefore has 3.5U free in total: a contiguous 3U at the bottom of the
-T0 rack plus 0.5U left over at the bottom of T1, since only two of the three
-OptiPlex 3080s fit below `dell` in the 8U upper rack. The schematic uses 12
+The rack therefore has 4.5U free in total: 1U below the patching, a contiguous
+3U at the bottom of T0, and 0.5U at the bottom of T1. The remaining equipment
+is shown in its existing positions. The schematic uses 12
 interior rows—one per rack unit—with exact half-unit boundaries identified by
 the measurements at right.
