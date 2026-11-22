@@ -173,14 +173,6 @@
       '';
     };
 
-    virtualHosts."jobs.soderlind.dev" = {
-      forceSSL = true;
-      useACMEHost = "soderlind.dev";
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:8770";
-      };
-    };
-
     virtualHosts."bunko.soderlind.dev" = {
       forceSSL = true;
       useACMEHost = "soderlind.dev";
@@ -192,18 +184,5 @@
       };
     };
 
-    virtualHosts."habits.soderlind.dev" =
-      lib.mkIf config.virtualisation.oci-containers.containers.beaverhabits.autoStart
-        {
-          forceSSL = true;
-          useACMEHost = "soderlind.dev";
-          locations."/" = {
-            # beaverhabits runs with --network=host (see beaverhabits.nix), so
-            # its gunicorn listens directly on the host at its default port.
-            proxyPass = "http://127.0.0.1:8080";
-            # NiceGUI apps do all UI updates over a websocket.
-            proxyWebsockets = true;
-          };
-        };
   };
 }
