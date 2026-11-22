@@ -1,19 +1,18 @@
 { config, lib, ... }:
-lib.mkIf config.homelab.apps.enable {
-  # Provision this root-only runtime file on the VM before enabling ACME.
-  # No Dell secret files or private keys are reused.
+lib.mkIf (config.homelab.apps.enable && config.homelab.apps.proxy.enable) {
+  # Share the encrypted DNS credential with Dell, not its private host key.
+  age.secrets.acme-cloudflare-env.file = ../../dell/secrets/acme-cloudflare-env.age;
   security.acme = {
     acceptTerms = true;
     defaults.email = "axel@soderlind.dev";
     certs."soderlind.dev" = {
       extraDomainNames = [ "*.soderlind.dev" ];
       dnsProvider = "cloudflare";
-      environmentFile = "/var/lib/acme-secrets/cloudflare.env";
+      environmentFile = config.age.secrets.acme-cloudflare-env.path;
       dnsResolver = "1.1.1.1:53";
       group = "nginx";
     };
   };
-  systemd.tmpfiles.rules = [ "d /var/lib/acme-secrets 0700 root root - -" ];
   services.nginx = {
     enable = true;
     recommendedProxySettings = true;

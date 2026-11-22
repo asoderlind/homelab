@@ -65,7 +65,10 @@
     in
     {
       nixosConfigurations = {
-        app-vm-1 = mkHost [ ./hosts/app-vm-1/configuration.nix ];
+        app-vm-1 = mkHost [
+          ./hosts/app-vm-1/configuration.nix
+          agenix.nixosModules.default
+        ];
         dell = mkHost [
           ./hosts/dell
           agenix.nixosModules.default
@@ -75,6 +78,8 @@
       deploy.nodes = {
         app-vm-1 = (mkDeployNode "192.168.1.217" self.nixosConfigurations.app-vm-1) // {
           sshUser = "root";
+          activationTimeout = 3600;
+          confirmTimeout = 600;
         };
         dell = (mkDeployNode "nixos-homelab-dell.tail193da7.ts.net" self.nixosConfigurations.dell) // {
           sshOpts = [

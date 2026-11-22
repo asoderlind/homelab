@@ -4,6 +4,7 @@
 let
   # Dell server host key (replace with actual key from server)
   dell = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFJPq/e8eKJNreORcH237atCR17bxVm+YPu4Zk11aZxa root@nixos-homelab-dell";
+  app-vm-1 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINUs+SoZvMrr/sffxqLGYy2hdaujjw7QwRw37hZIUmpp root@app-vm-1";
   # Personal key (~/.ssh/id_ed25519) so secrets can be created/edited from
   # the laptop without needing the server's host key.
   axel = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIIjaiim8xgFT9uZkzEyvOwx3ZNMs5e37/ZSiN8ZdN25 axel@soderlind.dev";
@@ -21,6 +22,7 @@ in
   # CLOUDFLARE_DNS_API_TOKEN=... env file for ACME DNS-01 challenges
   "acme-cloudflare-env.age".publicKeys = [
     dell
+    app-vm-1
     axel
   ];
   # Nextcloud admin account password (services.nextcloud.config.adminpassFile)

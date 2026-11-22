@@ -3,8 +3,9 @@
 {
   imports = [ ./hardware-configuration.nix ./services ];
 
-  # Enable only after base deployment, reboot verification, and secret provisioning.
-  homelab.apps.enable = false;
+  homelab.apps.enable = true;
+  # HTTPS is reachable only over the trusted Tailscale interface.
+  homelab.apps.proxy.enable = true;
 
   boot.loader.grub.enable = true;
   boot.loader.grub.devices = [ "/dev/sda" ];

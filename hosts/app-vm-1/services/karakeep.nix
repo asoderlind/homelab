@@ -32,6 +32,8 @@ lib.mkIf config.homelab.apps.enable {
     };
     script = ''
       set -eu
+      # Rootless Podman needs the setuid newuidmap/newgidmap wrappers at boot.
+      export PATH="/run/wrappers/bin:$PATH"
       if [ ! -f /var/lib/karakeep/runtime.env ]; then
         printf 'NEXTAUTH_SECRET=%s\nMEILI_MASTER_KEY=%s\n' \
           "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" \
