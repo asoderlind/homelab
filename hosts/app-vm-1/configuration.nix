@@ -23,6 +23,14 @@
   services.spice-vdagentd.enable = true;
   services.openssh.enable = true;
 
+  users.users.agent = {
+    isNormalUser = true;
+    description = "Agent access from rpi";
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMv99HtmbbOJ13PQKKDb5yBOJaoB4MR5uAzN3UFDlBPS asoderlind@rpi to agent@app-vm-1"
+    ];
+  };
+
   users.users.axel = {
     isNormalUser = true;
     uid = 1000;
