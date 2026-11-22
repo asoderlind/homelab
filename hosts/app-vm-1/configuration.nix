@@ -26,10 +26,20 @@
   users.users.agent = {
     isNormalUser = true;
     description = "Agent access from rpi";
+    extraGroups = [ "wheel" "systemd-journal" ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMv99HtmbbOJ13PQKKDb5yBOJaoB4MR5uAzN3UFDlBPS asoderlind@rpi to agent@app-vm-1"
     ];
   };
+
+  security.sudo.extraRules = [
+    {
+      users = [ "agent" ];
+      commands = [
+        { command = "ALL"; options = [ "NOPASSWD" ]; }
+      ];
+    }
+  ];
 
   users.users.axel = {
     isNormalUser = true;
