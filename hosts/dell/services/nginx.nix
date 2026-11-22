@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   # Contains CLOUDFLARE_DNS_API_TOKEN=<token scoped to Zone.DNS edit on
   # soderlind.dev>. The host is only reachable over Tailscale, so HTTP-01
@@ -8,7 +13,7 @@
 
   security.acme = {
     acceptTerms = true;
-    defaults.email = "axesode@gmail.com";
+    defaults.email = "axel@soderlind.dev";
     # One wildcard cert for every service subdomain: new services need no
     # new cert (and individual hostnames stay out of the public CT logs).
     certs."soderlind.dev" = {
@@ -187,16 +192,18 @@
       };
     };
 
-    virtualHosts."habits.soderlind.dev" = lib.mkIf config.virtualisation.oci-containers.containers.beaverhabits.autoStart {
-      forceSSL = true;
-      useACMEHost = "soderlind.dev";
-      locations."/" = {
-        # beaverhabits runs with --network=host (see beaverhabits.nix), so
-        # its gunicorn listens directly on the host at its default port.
-        proxyPass = "http://127.0.0.1:8080";
-        # NiceGUI apps do all UI updates over a websocket.
-        proxyWebsockets = true;
-      };
-    };
+    virtualHosts."habits.soderlind.dev" =
+      lib.mkIf config.virtualisation.oci-containers.containers.beaverhabits.autoStart
+        {
+          forceSSL = true;
+          useACMEHost = "soderlind.dev";
+          locations."/" = {
+            # beaverhabits runs with --network=host (see beaverhabits.nix), so
+            # its gunicorn listens directly on the host at its default port.
+            proxyPass = "http://127.0.0.1:8080";
+            # NiceGUI apps do all UI updates over a websocket.
+            proxyWebsockets = true;
+          };
+        };
   };
 }

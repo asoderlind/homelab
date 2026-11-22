@@ -4,7 +4,7 @@
   # No Dell secret files or private keys are reused.
   security.acme = {
     acceptTerms = true;
-    defaults.email = "axesode@gmail.com";
+    defaults.email = "axel@soderlind.dev";
     certs."soderlind.dev" = {
       extraDomainNames = [ "*.soderlind.dev" ];
       dnsProvider = "cloudflare";

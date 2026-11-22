@@ -65,6 +65,7 @@
     in
     {
       nixosConfigurations = {
+        app-vm-1 = mkHost [ ./hosts/app-vm-1/configuration.nix ];
         apps-vm = mkHost [ ./hosts/apps-vm ];
         dell = mkHost [
           ./hosts/dell
@@ -77,6 +78,9 @@
       };
 
       deploy.nodes = {
+        app-vm-1 = (mkDeployNode "192.168.1.217" self.nixosConfigurations.app-vm-1) // {
+          sshUser = "root";
+        };
         # Deliberately non-resolving until the VM and SSH identity are provisioned.
         apps-vm = (mkDeployNode "REPLACE-WITH-APPS-VM.invalid" self.nixosConfigurations.apps-vm) // {
           sshOpts = [ "-i" "~/.ssh/homelab/REPLACE-WITH-APPS-VM-KEY" ];

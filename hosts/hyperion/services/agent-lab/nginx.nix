@@ -14,7 +14,7 @@
 
   security.acme = {
     acceptTerms = true;
-    defaults.email = "axesode@gmail.com";
+    defaults.email = "axel@soderlind.dev";
     certs."buzz.soderlind.dev" = {
       extraDomainNames = [ "forgejo.soderlind.dev" ];
       dnsProvider = "cloudflare";
