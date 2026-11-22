@@ -37,6 +37,17 @@
     recommendedTlsSettings = true;
     recommendedGzipSettings = true;
 
+    # Reject unmatched hostnames instead of serving the first application.
+    # addSSL keeps both HTTP and HTTPS listeners, without an HTTP redirect.
+    virtualHosts."_" = {
+      default = true;
+      addSSL = true;
+      useACMEHost = "soderlind.dev";
+      extraConfig = ''
+        return 404;
+      '';
+    };
+
     virtualHosts."grafana.soderlind.dev" = {
       forceSSL = true;
       useACMEHost = "soderlind.dev";
