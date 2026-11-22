@@ -25,6 +25,5 @@
     ./navidrome.nix
     ./open-webui.nix
     ./bunko.nix
-    ./shoku.nix
   ];
 }
