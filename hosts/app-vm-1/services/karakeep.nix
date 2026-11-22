@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   uid = toString config.users.users.axel.uid;
   network = "karakeep";
@@ -21,8 +26,14 @@ lib.mkIf config.homelab.apps.enable {
   # The same file supplies the search key to both Meilisearch and Karakeep.
   systemd.services.karakeep-setup = {
     requires = [ "user@${uid}.service" ];
-    after = [ "user@${uid}.service" "systemd-tmpfiles-setup.service" ];
-    path = [ pkgs.podman pkgs.openssl ];
+    after = [
+      "user@${uid}.service"
+      "systemd-tmpfiles-setup.service"
+    ];
+    path = [
+      pkgs.podman
+      pkgs.openssl
+    ];
     environment.XDG_RUNTIME_DIR = "/run/user/${uid}";
     serviceConfig = {
       Type = "oneshot";
@@ -60,7 +71,10 @@ lib.mkIf config.homelab.apps.enable {
   virtualisation.oci-containers.containers = {
     karakeep = common // {
       image = "ghcr.io/karakeep-app/karakeep:0.35.0";
-      dependsOn = [ "karakeep-search" "karakeep-chrome" ];
+      dependsOn = [
+        "karakeep-search"
+        "karakeep-chrome"
+      ];
       ports = [ "127.0.0.1:3006:3000" ];
       volumes = [ "/var/lib/karakeep/data:/data" ];
       environmentFiles = [ "/var/lib/karakeep/runtime.env" ];
@@ -70,7 +84,7 @@ lib.mkIf config.homelab.apps.enable {
         MEILI_ADDR = "http://karakeep-search:7700";
         BROWSER_WEB_URL = "http://karakeep-chrome:9222";
         # Enable temporarily in this module for initial account creation.
-        DISABLE_SIGNUPS = "true";
+        DISABLE_SIGNUPS = "false";
       };
     };
     karakeep-search = common // {
