@@ -71,10 +71,6 @@
           ./hosts/dell
           agenix.nixosModules.default
         ];
-        hyperion = mkHost [
-          ./hosts/hyperion
-          agenix.nixosModules.default
-        ];
       };
 
       deploy.nodes = {
@@ -89,13 +85,6 @@
           sshOpts = [
             "-i"
             "~/.ssh/homelab/dell"
-          ];
-        };
-
-        hyperion = (mkDeployNode "hyperion" self.nixosConfigurations.hyperion) // {
-          sshOpts = [
-            "-i"
-            "~/.ssh/homelab/hyperion"
           ];
         };
       };
