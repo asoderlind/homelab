@@ -153,8 +153,6 @@
             <nav class="grid" aria-label="Services">
               <a href="https://jobs.soderlind.dev"><strong>Shoku</strong><small>Job search and application dashboard</small></a>
               <a href="https://bunko.soderlind.dev"><strong>Bunko</strong><small>Notes</small></a>
-              <a href="https://karakeep.soderlind.dev"><strong>Karakeep</strong><small>AI-tagged notes and bookmarks</small></a>
-              <a href="https://jobtracker.soderlind.dev"><strong>Job Tracker</strong><small>Opportunities and application history</small></a>
               <a href="https://drive.soderlind.dev"><strong>Nextcloud</strong><small>Files and collaboration</small></a>
               <a href="https://actual.soderlind.dev"><strong>Actual</strong><small>Budgeting</small></a>
               <a href="https://rss.soderlind.dev"><strong>Miniflux</strong><small>RSS reader</small></a>
@@ -168,28 +166,6 @@
         </body>
         </html>
       '';
-    };
-
-    virtualHosts."karakeep.soderlind.dev" = {
-      forceSSL = true;
-      useACMEHost = "soderlind.dev";
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:3006";
-        proxyWebsockets = true;
-        extraConfig = ''
-          client_max_body_size 100m;
-        '';
-      };
-    };
-
-    # No public access: Job Tracker relies on the private tailnet boundary.
-    virtualHosts."jobtracker.soderlind.dev" = {
-      forceSSL = true;
-      useACMEHost = "soderlind.dev";
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:3456";
-        proxyWebsockets = true;
-      };
     };
 
     virtualHosts."jobs.soderlind.dev" = {

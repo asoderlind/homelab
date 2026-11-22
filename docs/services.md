@@ -29,70 +29,10 @@
   hostnames remain reachable only
   through the tailnet-protected nginx ingress.
 
-## Karakeep and Job Tracker (Dell)
+## Services moved off Dell
 
-- **https://karakeep.soderlind.dev** — Karakeep 0.35.0, with private
-  Meilisearch and Chrome sidecars. Only the web port is published, on loopback
-  port 3006. State and runtime credentials live under `/var/lib/karakeep`.
-- **https://jobtracker.soderlind.dev** — Job Tracker v2.0.2, on loopback port
-  3456. SQLite, configuration, runtime state, and backups persist under
-  `/var/lib/job-tracker/{data,config,state,backups}`.
-- Both use rootless Podman as `axel`, the existing wildcard TLS certificate,
-  and tailnet-only nginx ingress. Bunko and Shoku remain unchanged.
-  Ensure both DNS names resolve to Dell's Tailscale address (DNS-only, not
-  Cloudflare-proxied). Job Tracker's trusted-host list is not authentication:
-  anyone allowed through this tailnet boundary can access it.
-
-### First-run setup
-
-Karakeep's setup unit generates persistent authentication and search secrets
-on the server; no plaintext secrets enter Git or the Nix store. Signups are
-disabled by default. Temporarily set `DISABLE_SIGNUPS = "false"` in
-`hosts/dell/services/karakeep.nix`, deploy, create your account, then restore
-`"true"` and deploy again.
-
-For automatic tagging, add provider settings to
-`/var/lib/karakeep/runtime.env` using `sudoedit`, preserving the generated
-secrets and mode 0600/owner axel. For example:
-
-```ini
-OLLAMA_BASE_URL=http://YOUR-OLLAMA-HOST:11434
-INFERENCE_TEXT_MODEL=YOUR-INSTALLED-MODEL
-```
-
-Use an endpoint reachable from the container, not localhost. Alternatively
-configure `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `INFERENCE_TEXT_MODEL`
-for an OpenAI-compatible provider. Restart `podman-karakeep` afterward.
-See [Karakeep configuration](https://docs.karakeep.com/configuration).
-AI tagging remains unconfigured until a provider is supplied.
-
-For Job Tracker, download and unpack `job-tracker-extension-2.0.2.zip` from
-[the matching release](https://github.com/Muatasim-Aswad/job-tracker/releases/tag/v2.0.2),
-load it as an unpacked Chromium extension, and set its Server setting to
-`https://jobtracker.soderlind.dev`. Keep the extension and server versions aligned.
-
-### Verification and backups
-
-After deployment:
-
-```sh
-sudo systemctl status podman-karakeep podman-karakeep-search podman-karakeep-chrome podman-job-tracker
-curl -f http://127.0.0.1:3456/health/ready
-curl -I https://karakeep.soderlind.dev
-curl -I https://jobtracker.soderlind.dev
-```
-
-Test saving/reopening a note, automatic tagging after configuring a model, and
-capturing an opportunity through the extension. Confirm persistence after
-restarting the containers. Chrome is pinned to a registry manifest digest;
-update it deliberately alongside Karakeep upgrades.
-
-**These directories are not yet included in the existing restic jobs.**
-Before upgrades, stop the corresponding containers and copy the entire
-`/var/lib/karakeep` or `/var/lib/job-tracker` directory to protected off-host
-storage, then restart even if copying fails. Stop both Karakeep and its search
-sidecar for a consistent snapshot. Include runtime secrets in encrypted backups.
-Image rollback alone does not reverse database migrations.
+Karakeep and Job Tracker now belong to the placeholder [apps-vm host](apps-vm.md).
+Redeploying Dell removes their units and nginx routes, but preserves their data.
 
 ## Nextcloud (drive.soderlind.dev)
 

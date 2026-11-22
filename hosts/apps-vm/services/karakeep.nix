@@ -6,7 +6,6 @@ let
     podman.user = "axel";
     extraOptions = [
       "--network=${network}"
-      "--userns=keep-id:uid=0,gid=0"
       "--security-opt=no-new-privileges"
     ];
   };

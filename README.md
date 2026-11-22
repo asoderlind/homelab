@@ -23,6 +23,7 @@ Secrets are encrypted with agenix; deployments are manual.
 | [Networking](docs/networking.md) | Tailscale ingress, DNS/TLS, nginx, and Proton VPN isolation |
 | [Deployment and secrets](docs/deployment.md) | Validation, deploy-rs, and agenix workflows |
 | [Dell services](docs/services.md) | App setup, troubleshooting, release updates, and monitoring |
+| [Apps VM](docs/apps-vm.md) | Proxmox VM template and migration of Karakeep and Job Tracker off Dell |
 | [Backups and recovery](docs/backups.md) | Restic schedules, retention, and restore procedures |
 | [Proxmox cluster](docs/proxmox.md) | Provisioning notes and outstanding setup |
 

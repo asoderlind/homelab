@@ -65,6 +65,7 @@
     in
     {
       nixosConfigurations = {
+        apps-vm = mkHost [ ./hosts/apps-vm ];
         dell = mkHost [
           ./hosts/dell
           agenix.nixosModules.default
@@ -76,6 +77,10 @@
       };
 
       deploy.nodes = {
+        # Deliberately non-resolving until the VM and SSH identity are provisioned.
+        apps-vm = (mkDeployNode "REPLACE-WITH-APPS-VM.invalid" self.nixosConfigurations.apps-vm) // {
+          sshOpts = [ "-i" "~/.ssh/homelab/REPLACE-WITH-APPS-VM-KEY" ];
+        };
         dell = (mkDeployNode "nixos-homelab-dell.tail193da7.ts.net" self.nixosConfigurations.dell) // {
           sshOpts = [
             "-i"
