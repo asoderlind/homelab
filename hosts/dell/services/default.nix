@@ -26,5 +26,7 @@
     ./open-webui.nix
     ./bunko.nix
     ./shoku.nix
+    ./karakeep.nix
+    ./job-tracker.nix
   ];
 }

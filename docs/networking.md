@@ -38,6 +38,8 @@ use localhost except Transmission, which lives in a network namespace.
 | `kavita.soderlind.dev` | `127.0.0.1:5000` | WebSockets for scan and reading events |
 | `rss.soderlind.dev` | `127.0.0.1:18069` | Miniflux; security headers from Poseidon |
 | `chat.soderlind.dev` | `127.0.0.1:8081` | Open WebUI; WebSockets and unbuffered chat streaming |
+| `karakeep.soderlind.dev` | `127.0.0.1:3006` | Karakeep; search and Chrome remain on a private container network |
+| `jobtracker.soderlind.dev` | `127.0.0.1:3456` | Job Tracker; access restricted by the tailnet boundary |
 | `music.soderlind.dev` | `127.0.0.1:4533` | Navidrome; Subsonic apps use the same URL |
 | `transmission.soderlind.dev` | `10.233.0.2:9091` | Veth into the VPN namespace; see below |
 
