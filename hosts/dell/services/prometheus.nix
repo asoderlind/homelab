@@ -34,6 +34,10 @@
             targets = [ "192.168.1.211:9100" ];
             labels.instance = "rpi5";
           }
+          {
+            targets = [ "app-vm-1.tail193da7.ts.net:9100" ];
+            labels.instance = "app-vm-1";
+          }
         ];
       }
     ];

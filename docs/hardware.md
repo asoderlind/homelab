@@ -1,9 +1,22 @@
 # Homelab hardware
 
 The Dell runs the main homelab services, the OptiPlex 3080s form a Proxmox VE
-cluster, and the Raspberry Pi 5 runs Debian. Prometheus scrapes the Dell and Raspberry Pi 5 as
-`node` targets. The relevant scrape configuration lives in
-`hosts/dell/services/prometheus.nix`.
+cluster, and the Raspberry Pi 5 runs Debian. Prometheus scrapes the Dell,
+Raspberry Pi 5, and app-vm-1 as `node` targets. The relevant scrape configuration
+lives in `hosts/dell/services/prometheus.nix`.
+
+The app VM runs the NixOS node exporter on port 9100, scraped over Tailscale at
+`app-vm-1.tail193da7.ts.net` (requires that MagicDNS name and tailnet access from
+Dell). No LAN firewall port is opened. Deploy `app-vm-1` first, then `dell`:
+
+```sh
+nix run nixpkgs#deploy-rs -- .#app-vm-1
+nix run nixpkgs#deploy-rs -- .#dell
+```
+
+After deployment, verify `up{job="node",instance="app-vm-1"}` is `1` in
+Prometheus. To troubleshoot, run
+`curl -f http://app-vm-1.tail193da7.ts.net:9100/metrics` from Dell.
 
 ## Compute
 
@@ -13,7 +26,7 @@ cluster, and the Raspberry Pi 5 runs Debian. Prometheus scrapes the Dell and Ras
 | `pve1` | Dell OptiPlex 3080 | Intel Core i5-10500T — 6C/12T, 2.3 GHz (Comet Lake) | 32 GB (31.09 GiB usable) | 67.73 GiB root filesystem, 4.22 GiB used | Proxmox VE 9.2.2 |
 | `rpi5` | Raspberry Pi 5 Model B (Rev 1.1) | Broadcom BCM2712 — quad Cortex-A76, 2.4 GHz | 16 GB | 32 GB microSD | Debian 12 (bookworm) |
 
-The `dell` and `rpi5` names are Prometheus `instance` labels.
+The `dell`, `rpi5`, and `app-vm-1` names are Prometheus `instance` labels.
 
 `pve1` is the first of three OptiPlex 3080s planned for the Proxmox cluster;
 the other two have not been provisioned yet. It boots in EFI mode on kernel
