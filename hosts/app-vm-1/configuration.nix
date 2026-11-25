@@ -19,6 +19,14 @@
     "nix-command"
     "flakes"
   ];
+  # Scraped by Dell over the trusted tailscale0 interface; no LAN port opened.
+  services.prometheus.exporters.node = {
+    enable = true;
+    port = 9100;
+    enabledCollectors = [ "systemd" ];
+    openFirewall = false;
+  };
+
   services.qemuGuest.enable = true;
   services.spice-vdagentd.enable = true;
   services.openssh.enable = true;
