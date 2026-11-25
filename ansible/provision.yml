@@ -1,0 +1,57 @@
+---
+- name: Configure Raspberry Pi baseline
+  hosts: raspberry_pis
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Require Debian 12
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] == 'Debian'
+          - ansible_facts['distribution_major_version'] == '12'
+        fail_msg: This playbook currently supports Debian 12 (bookworm) only.
+
+    - name: Install repository prerequisites
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - python3-apt
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install Tailscale repository signing key
+      ansible.builtin.get_url:
+        url: https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg
+        dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Configure Tailscale repository using the existing layout
+      ansible.builtin.apt_repository:
+        repo: deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/debian bookworm main
+        filename: tailscale
+        state: present
+        update_cache: true
+
+    - name: Install baseline services
+      ansible.builtin.apt:
+        name:
+          - tailscale
+          - prometheus-node-exporter
+        state: present
+
+    - name: Enable and start baseline services
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - tailscaled
+        - prometheus-node-exporter
+
+    # Tailnet enrollment is intentionally separate. Do not reset an existing
+    # login or embed enrollment keys in this playbook.
+    # Pi harness installation is not yet managed; preserve its existing layout.
