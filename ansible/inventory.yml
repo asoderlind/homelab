@@ -1,0 +1,10 @@
+---
+all:
+  children:
+    raspberry_pis:
+      hosts:
+        rpi5:
+          # Tailscale address observed on the Pi; override for LAN access.
+          ansible_host: 100.113.71.15
+          ansible_user: asoderlind
+          ansible_python_interpreter: /usr/bin/python3

@@ -19,6 +19,7 @@ Secrets are encrypted with agenix; deployments are manual.
 
 | Guide | Contents |
 | --- | --- |
+| [Raspberry Pi inventory](ansible/README.md) | Read-only Ansible discovery and current Pi setup |
 | [Hardware](docs/hardware.md) | Machines, storage, network equipment, UPS, and rack layout |
 | [Networking](docs/networking.md) | Tailscale ingress, DNS/TLS, nginx, and Proton VPN isolation |
 | [Deployment and secrets](docs/deployment.md) | Validation, deploy-rs, and agenix workflows |

@@ -1,0 +1,96 @@
+---
+- name: Collect a read-only Raspberry Pi inventory
+  hosts: raspberry_pis
+  gather_facts: false
+  become: false
+  vars:
+    report_dir: "{{ playbook_dir }}/reports"
+    discovery_commands:
+      - name: os
+        argv: [cat, /etc/os-release]
+      - name: architecture
+        argv: [uname, -m]
+      - name: kernel
+        argv: [uname, -r]
+      - name: hostname
+        argv: [hostname]
+      - name: identity
+        argv: [id]
+      - name: packages
+        argv: [dpkg-query, -W, '-f=${binary:Package}\t${Version}\t${db:Status-Status}\n']
+      - name: manual_packages
+        argv: [apt-mark, showmanual]
+      - name: system_services
+        argv: [systemctl, list-units, '--type=service', --all, --no-pager, --no-legend]
+      - name: system_unit_files
+        argv: [systemctl, list-unit-files, '--type=service', --no-pager, --no-legend]
+      - name: system_timers
+        argv: [systemctl, list-timers, --all, --no-pager]
+      - name: user_services
+        argv: [systemctl, --user, list-units, '--type=service', --all, --no-pager, --no-legend]
+      - name: user_unit_files
+        argv: [systemctl, --user, list-unit-files, '--type=service', --no-pager, --no-legend]
+      - name: user_timers
+        argv: [systemctl, --user, list-timers, --all, --no-pager]
+      - name: storage
+        argv: [lsblk, --json, --output, 'NAME,SIZE,FSTYPE,MOUNTPOINTS']
+      - name: disk_usage
+        argv: [df, -h]
+      - name: listeners
+        argv: [ss, -lntu]
+      # Avoid docker inspect, service contents and process command lines:
+      # those can expose environment secrets or tokens.
+      - name: containers
+        argv: [docker, ps, --all, --format, '{{ "{{json .}}" }}']
+      - name: node_version
+        argv: [node, --version]
+      - name: npm_packages
+        argv: [npm, list, --global, --depth=0, --json]
+      - name: tailscale_version
+        argv: [tailscale, version]
+
+  tasks:
+    - name: Run observational commands without privilege escalation
+      ansible.builtin.command:
+        argv: "{{ item.argv }}"
+      loop: "{{ discovery_commands }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: discovery
+      changed_when: false
+      failed_when: false
+      # These commands are read-only; allow discovery in check mode too.
+      check_mode: false
+      environment:
+        LC_ALL: C
+      no_log: true
+
+    - name: Create private report directory on the controller
+      ansible.builtin.file:
+        path: "{{ report_dir }}"
+        state: directory
+        mode: '0700'
+      delegate_to: localhost
+      become: false
+
+    - name: Save observations including command failures on the controller
+      ansible.builtin.copy:
+        dest: "{{ report_dir }}/{{ inventory_hostname }}.json"
+        mode: '0600'
+        content: "{{ {'host': inventory_hostname, 'observations': discovery.results} | to_nice_json }}\n"
+      delegate_to: localhost
+      become: false
+      no_log: true
+      diff: false
+
+    - name: Report incomplete observations
+      ansible.builtin.debug:
+        msg: "{{ item.item.name }} failed (rc={{ item.rc | default('unavailable') }}); see the private report."
+      loop: "{{ discovery.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: (item.rc | default(1)) != 0
+
+    - name: Report location
+      ansible.builtin.debug:
+        msg: "Report: {{ report_dir }}/{{ inventory_hostname }}.json (not written in check mode)"
