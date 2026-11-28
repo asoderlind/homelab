@@ -28,8 +28,11 @@ Prometheus. To troubleshoot, run
 
 The `dell`, `rpi5`, and `app-vm-1` names are Prometheus `instance` labels.
 
-`pve1` is the first of three OptiPlex 3080s planned for the Proxmox cluster;
-the other two have not been provisioned yet. It boots in EFI mode on kernel
+`pve1`, `pve2`, and `pve3` are provisioned and joined to the `homelab` Proxmox
+cluster at `192.168.1.55`, `.56`, and `.57`, respectively. All three nodes are
+online and the cluster is quorate (two of three votes required). The detailed
+specifications above were collected from `pve1`; the other nodes have not yet
+been hardware-inventoried. `pve1` boots in EFI mode on kernel
 `7.0.2-6-pve` with an 8 GiB swap volume, and storage is local to the node.
 Cluster provisioning notes are in the [Proxmox guide](proxmox.md).
 

@@ -34,6 +34,19 @@
             targets = [ "192.168.1.211:9100" ];
             labels.instance = "rpi5";
           }
+          # Proxmox homelab cluster management IPs (see docs/proxmox.md).
+          {
+            targets = [ "192.168.1.55:9100" ];
+            labels.instance = "pve1";
+          }
+          {
+            targets = [ "192.168.1.56:9100" ];
+            labels.instance = "pve2";
+          }
+          {
+            targets = [ "192.168.1.57:9100" ];
+            labels.instance = "pve3";
+          }
           {
             targets = [ "app-vm-1.tail193da7.ts.net:9100" ];
             labels.instance = "app-vm-1";
