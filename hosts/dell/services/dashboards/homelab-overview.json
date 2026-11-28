@@ -2,60 +2,451 @@
   "id": null,
   "uid": "homelab-overview",
   "title": "Homelab Overview",
-  "tags": ["homelab"],
+  "tags": [
+    "homelab"
+  ],
   "timezone": "browser",
   "schemaVersion": 41,
-  "version": 1,
+  "version": 2,
   "editable": false,
   "refresh": "30s",
-  "time": { "from": "now-6h", "to": "now" },
-  "templating": { "list": [] },
-  "annotations": { "list": [] },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
   "panels": [
     {
-      "type": "row",
-      "id": 1,
-      "title": "Temperature",
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
-      "panels": []
-    },
-    {
-      "type": "stat",
-      "id": 2,
-      "title": "Current temperature",
-      "description": "Hottest sensor on each device right now.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 1 },
+      "id": 20,
+      "type": "table",
+      "title": "Hosts — current status and capacity",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 8
+      },
+      "description": "One row per configured node target, including down hosts. RAM used = total − available. CPU temperature = hottest identified CPU sensor (package/core), never arbitrary firmware sensors; unavailable on many VMs. Storage is the root filesystem only, not LVM-thin/VM pool capacity. Missing metrics remain N/A.",
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "max by (instance) (node_hwmon_temp_celsius > 0)",
+          "expr": "max by (instance) (up{job=\"node\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "B",
+          "expr": "max by (instance) (node_memory_MemTotal_bytes{job=\"node\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "C",
+          "expr": "(max by (instance) (node_memory_MemTotal_bytes{job=\"node\"})) - (max by (instance) (node_memory_MemAvailable_bytes{job=\"node\"}))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "D",
+          "expr": "100 * (1 - (max by (instance) (node_memory_MemAvailable_bytes{job=\"node\"}) / max by (instance) (node_memory_MemTotal_bytes{job=\"node\"})))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "E",
+          "expr": "count by (instance) (node_cpu_seconds_total{job=\"node\",mode=\"idle\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "F",
+          "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{job=\"node\",mode=\"idle\"}[$__rate_interval])))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "G",
+          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node\"} * on (instance, job, chip) group_left(chip_name) node_hwmon_chip_names{job=\"node\",chip_name=~\"coretemp|k10temp|cpu_thermal\"}) or max by (instance) (node_thermal_zone_temp{job=\"node\",type=~\"cpu-thermal|cpu_thermal|x86_pkg_temp\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "H",
+          "expr": "max by (instance) (node_filesystem_size_bytes{job=\"node\",mountpoint=\"/\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "I",
+          "expr": "100 * (1 - (max by (instance) (node_filesystem_avail_bytes{job=\"node\",mountpoint=\"/\"}) / max by (instance) (node_filesystem_size_bytes{job=\"node\",mountpoint=\"/\"})))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "instance",
+            "mode": "outerTabular"
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "instance",
+                "Value #A",
+                "Value #B",
+                "Value #C",
+                "Value #D",
+                "Value #E",
+                "Value #F",
+                "Value #G",
+                "Value #H",
+                "Value #I"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value #A": "Status",
+              "Value #B": "RAM total",
+              "Value #C": "RAM used",
+              "Value #D": "RAM used %",
+              "Value #E": "Logical CPUs",
+              "Value #F": "CPU used %",
+              "Value #G": "CPU °C",
+              "Value #H": "Root capacity",
+              "Value #I": "Root used %",
+              "instance": "Host"
+            },
+            "indexByName": {
+              "instance": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "Value #C": 3,
+              "Value #D": 4,
+              "Value #E": 5,
+              "Value #F": 6,
+              "Value #G": 7,
+              "Value #H": 8,
+              "Value #I": 9
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Host"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "N/A",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "DOWN",
+                        "color": "red"
+                      },
+                      "1": {
+                        "text": "UP",
+                        "color": "green"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RAM total"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RAM used"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RAM used %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Logical CPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU used %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU °C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Root capacity"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Root used %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 15,
+      "title": "RAM usage",
+      "description": "Used RAM as a percentage of total, using MemAvailable.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "100 * (1 - (max by (instance) (node_memory_MemAvailable_bytes{job=\"node\"}) / max by (instance) (node_memory_MemTotal_bytes{job=\"node\"})))",
           "legendFormat": "{{instance}}"
         }
       ],
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "horizontal",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "celsius",
+          "unit": "percent",
           "decimals": 1,
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 60 },
-              { "color": "red", "value": 75 }
-            ]
-          }
+          "min": 0,
+          "max": 100,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisLabel": "",
+            "axisPlacement": "auto"
+          },
+          "noValue": "N/A"
         },
         "overrides": []
       }
@@ -63,15 +454,26 @@
     {
       "type": "timeseries",
       "id": 3,
-      "title": "Temperature — all devices",
-      "description": "Hottest sensor per device over time.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 5 },
+      "title": "CPU temperature",
+      "description": "Hottest identified CPU package/core sensor per host. Dell SMM, SSD and motherboard sensors excluded. Hosts without CPU sensors have no series.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "max by (instance) (node_hwmon_temp_celsius > 0)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node\"} * on (instance, job, chip) group_left(chip_name) node_hwmon_chip_names{job=\"node\",chip_name=~\"coretemp|k10temp|cpu_thermal\"}) or max by (instance) (node_thermal_zone_temp{job=\"node\",type=~\"cpu-thermal|cpu_thermal|x86_pkg_temp\"})",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -80,16 +482,24 @@
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true,
-          "calcs": ["lastNotNull", "max"]
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
         },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "fieldConfig": {
         "defaults": {
           "unit": "celsius",
           "decimals": 1,
           "min": 0,
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "drawStyle": "line",
             "lineWidth": 2,
@@ -98,149 +508,8 @@
             "spanNulls": false,
             "axisLabel": "",
             "axisPlacement": "auto"
-          }
-        },
-        "overrides": []
-      }
-    },
-    {
-      "type": "row",
-      "id": 4,
-      "title": "Per-sensor detail",
-      "collapsed": true,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
-      "panels": [
-        {
-          "type": "timeseries",
-          "id": 5,
-          "title": "Every sensor",
-          "description": "Individual hwmon sensors: CPU cores, package, chipset, wifi radio.",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 11, "w": 24, "x": 0, "y": 15 },
-          "targets": [
-            {
-              "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "node_hwmon_temp_celsius > 0",
-              "legendFormat": "{{instance}} · {{chip}} {{sensor}}"
-            }
-          ],
-          "options": {
-            "legend": {
-              "displayMode": "table",
-              "placement": "right",
-              "showLegend": true,
-              "calcs": ["lastNotNull"]
-            },
-            "tooltip": { "mode": "multi", "sort": "desc" }
           },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "celsius",
-              "decimals": 1,
-              "min": 0,
-              "color": { "mode": "palette-classic" },
-              "custom": {
-                "drawStyle": "line",
-                "lineWidth": 1,
-                "fillOpacity": 0,
-                "showPoints": "never",
-                "spanNulls": false
-              }
-            },
-            "overrides": []
-          }
-        }
-      ]
-    },
-    {
-      "type": "row",
-      "id": 11,
-      "title": "Compute",
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
-      "panels": []
-    },
-    {
-      "type": "stat",
-      "id": 12,
-      "title": "CPU usage",
-      "description": "Current CPU utilization per device.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 16 },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval])) * 100)",
-          "legendFormat": "{{instance}}"
-        }
-      ],
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "horizontal",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "decimals": 1,
-          "min": 0,
-          "max": 100,
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 70 },
-              { "color": "red", "value": 90 }
-            ]
-          }
-        },
-        "overrides": []
-      }
-    },
-    {
-      "type": "stat",
-      "id": 13,
-      "title": "RAM usage",
-      "description": "Current memory utilization per device.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 16 },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))",
-          "legendFormat": "{{instance}}"
-        }
-      ],
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "horizontal",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "decimals": 1,
-          "min": 0,
-          "max": 100,
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 75 },
-              { "color": "red", "value": 90 }
-            ]
-          }
+          "noValue": "N/A"
         },
         "overrides": []
       }
@@ -248,15 +517,26 @@
     {
       "type": "timeseries",
       "id": 14,
-      "title": "CPU usage — all devices",
-      "description": "CPU utilization over time.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 20 },
+      "title": "CPU usage",
+      "description": "Average utilization across logical CPUs.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval])) * 100)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{job=\"node\",mode=\"idle\"}[$__rate_interval])))",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -265,9 +545,15 @@
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true,
-          "calcs": ["lastNotNull", "max"]
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
         },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "fieldConfig": {
         "defaults": {
@@ -275,7 +561,9 @@
           "decimals": 1,
           "min": 0,
           "max": 100,
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "drawStyle": "line",
             "lineWidth": 2,
@@ -284,23 +572,35 @@
             "spanNulls": false,
             "axisLabel": "",
             "axisPlacement": "auto"
-          }
+          },
+          "noValue": "N/A"
         },
         "overrides": []
       }
     },
     {
       "type": "timeseries",
-      "id": 15,
-      "title": "RAM usage — all devices",
-      "description": "Memory utilization over time.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 29 },
+      "id": 21,
+      "title": "Root filesystem usage",
+      "description": "Root filesystem utilization only; includes reserved space as unavailable. Not Proxmox LVM-thin pool usage.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "100 * (1 - (max by (instance) (node_filesystem_avail_bytes{job=\"node\",mountpoint=\"/\"}) / max by (instance) (node_filesystem_size_bytes{job=\"node\",mountpoint=\"/\"})))",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -309,9 +609,15 @@
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true,
-          "calcs": ["lastNotNull", "max"]
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
         },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "fieldConfig": {
         "defaults": {
@@ -319,7 +625,9 @@
           "decimals": 1,
           "min": 0,
           "max": 100,
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "drawStyle": "line",
             "lineWidth": 2,
@@ -328,7 +636,134 @@
             "spanNulls": false,
             "axisLabel": "",
             "axisPlacement": "auto"
-          }
+          },
+          "noValue": "N/A"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 22,
+      "title": "Network RX",
+      "description": "Summed Ethernet/Wi-Fi receive throughput. Excludes bridges, virtual interfaces and Tailscale to avoid counting traffic twice.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{job=\"node\",device=~\"(en.*|eth[0-9]+|wlan[0-9]+|wlp.*)\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "decimals": 1,
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisLabel": "",
+            "axisPlacement": "auto"
+          },
+          "noValue": "N/A"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 23,
+      "title": "Network TX",
+      "description": "Summed Ethernet/Wi-Fi transmit throughput. Excludes bridges, virtual interfaces and Tailscale to avoid counting traffic twice.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (instance) (rate(node_network_transmit_bytes_total{job=\"node\",device=~\"(en.*|eth[0-9]+|wlan[0-9]+|wlp.*)\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "decimals": 1,
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisLabel": "",
+            "axisPlacement": "auto"
+          },
+          "noValue": "N/A"
         },
         "overrides": []
       }
@@ -338,7 +773,12 @@
       "id": 6,
       "title": "Storage",
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 38 },
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 24,
+        "h": 1
+      },
       "panels": []
     },
     {
@@ -346,12 +786,23 @@
       "id": 7,
       "title": "Filesystem usage",
       "description": "Percent full for every real filesystem on every device.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 10, "w": 14, "x": 0, "y": 39 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 36,
+        "w": 14,
+        "h": 10
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "100 * (1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|ramfs|overlay|squashfs|autofs|devtmpfs|fuse.*\", mountpoint!=\"/nix/store\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|ramfs|overlay|squashfs|autofs|devtmpfs|fuse.*\", mountpoint!=\"/nix/store\"})",
           "legendFormat": "{{instance}} · {{mountpoint}}",
           "instant": true,
@@ -359,7 +810,13 @@
         }
       ],
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "orientation": "horizontal",
         "displayMode": "basic",
         "valueMode": "color",
@@ -374,13 +831,24 @@
           "decimals": 1,
           "min": 0,
           "max": 100,
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 75 },
-              { "color": "red", "value": 90 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
             ]
           }
         },
@@ -392,18 +860,35 @@
       "id": 8,
       "title": "Backup drive — free space",
       "description": "External 1.8T exFAT drive mounted at /mnt/backup on the Dell.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 10, "x": 14, "y": 39 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 36,
+        "w": 10,
+        "h": 5
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "node_filesystem_avail_bytes{instance=\"dell\", mountpoint=\"/mnt/backup\"}",
           "legendFormat": "free"
         }
       ],
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "orientation": "auto",
         "textMode": "auto",
         "colorMode": "value",
@@ -414,13 +899,24 @@
         "defaults": {
           "unit": "bytes",
           "decimals": 1,
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 107374182400 },
-              { "color": "green", "value": 268435456000 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 107374182400
+              },
+              {
+                "color": "green",
+                "value": 268435456000
+              }
             ]
           },
           "noValue": "drive not mounted"
@@ -432,18 +928,35 @@
       "type": "stat",
       "id": 9,
       "title": "Backup drive — used",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 10, "x": 14, "y": 44 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 41,
+        "w": 10,
+        "h": 5
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "100 * (1 - node_filesystem_avail_bytes{instance=\"dell\", mountpoint=\"/mnt/backup\"} / node_filesystem_size_bytes{instance=\"dell\", mountpoint=\"/mnt/backup\"})",
           "legendFormat": "used"
         }
       ],
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "orientation": "auto",
         "textMode": "auto",
         "colorMode": "value",
@@ -456,13 +969,24 @@
           "decimals": 1,
           "min": 0,
           "max": 100,
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 75 },
-              { "color": "red", "value": 90 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
             ]
           },
           "noValue": "drive not mounted"
@@ -475,12 +999,23 @@
       "id": 10,
       "title": "Capacity",
       "description": "Absolute size and free space per filesystem.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 49 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 24,
+        "h": 9
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "node_filesystem_size_bytes{fstype!~\"tmpfs|ramfs|overlay|squashfs|autofs|devtmpfs|fuse.*\", mountpoint!=\"/nix/store\"}",
           "instant": true,
           "range": false,
@@ -488,7 +1023,10 @@
         },
         {
           "refId": "B",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "node_filesystem_avail_bytes{fstype!~\"tmpfs|ramfs|overlay|squashfs|autofs|devtmpfs|fuse.*\", mountpoint!=\"/nix/store\"}",
           "instant": true,
           "range": false,
@@ -496,7 +1034,10 @@
         }
       ],
       "transformations": [
-        { "id": "merge", "options": {} },
+        {
+          "id": "merge",
+          "options": {}
+        },
         {
           "id": "organize",
           "options": {
@@ -523,36 +1064,158 @@
             }
           }
         },
-        { "id": "sortBy", "options": { "sort": [{ "field": "Device" }] } }
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Device"
+              }
+            ]
+          }
+        }
       ],
       "options": {
         "showHeader": true,
         "cellHeight": "sm",
-        "footer": { "show": false, "reducer": ["sum"], "countRows": false, "fields": "" }
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] },
-          "custom": { "align": "auto", "cellOptions": { "type": "auto" } }
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Size" },
+            "matcher": {
+              "id": "byName",
+              "options": "Size"
+            },
             "properties": [
-              { "id": "unit", "value": "bytes" },
-              { "id": "decimals", "value": 1 }
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Free" },
+            "matcher": {
+              "id": "byName",
+              "options": "Free"
+            },
             "properties": [
-              { "id": "unit", "value": "bytes" },
-              { "id": "decimals", "value": 1 }
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
             ]
           }
         ]
       }
+    },
+    {
+      "type": "row",
+      "id": 4,
+      "title": "CPU sensor detail",
+      "collapsed": true,
+      "gridPos": {
+        "x": 0,
+        "y": 55,
+        "w": 24,
+        "h": 1
+      },
+      "panels": [
+        {
+          "type": "timeseries",
+          "id": 5,
+          "title": "CPU sensor detail",
+          "description": "Individual identified CPU sensors only; no Dell SMM firmware channels.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 56,
+            "w": 24,
+            "h": 11
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "node_hwmon_temp_celsius{job=\"node\"} * on (instance, job, chip) group_left(chip_name) node_hwmon_chip_names{job=\"node\",chip_name=~\"coretemp|k10temp|cpu_thermal\"}",
+              "legendFormat": "{{instance}} · {{chip}} {{sensor}}"
+            }
+          ],
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "decimals": 1,
+              "min": 0,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 0,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          }
+        }
+      ]
     }
   ]
 }
