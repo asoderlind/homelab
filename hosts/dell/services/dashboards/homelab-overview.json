@@ -237,6 +237,13 @@
                 "value": 0
               },
               {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
                 "id": "mappings",
                 "value": [
                   {

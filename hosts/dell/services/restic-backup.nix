@@ -47,6 +47,16 @@ let
   '';
 in
 {
+  # Disabled jobs no longer refresh their textfile metrics, but node exporter
+  # keeps reading old files indefinitely. Remove only Navidrome's stale metric
+  # files on activation; preserve its application state and backup repositories.
+  system.activationScripts.removeDisabledNavidromeBackupMetrics =
+    lib.mkIf (!config.services.navidrome.enable) ''
+      ${pkgs.coreutils}/bin/rm -f -- \
+        /var/lib/prometheus-node-exporter/textfiles/restic-navidrome.prom \
+        /var/lib/prometheus-node-exporter/textfiles/restic-navidrome-offsite.prom
+    '';
+
   # Interactive point-in-time restore (`sudo nextcloud-restore` on the host):
   # repo + snapshot selection, typed confirmation, then stop services ->
   # restore --delete -> reload DB dump -> clear redis -> restart + files:scan.
